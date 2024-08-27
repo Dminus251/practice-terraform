@@ -6,7 +6,6 @@ variable "gateway-id" {
   type = string
 }
 
-variable "rt-name" {
+variable "rt-usage" {
   type = string
-  default = "practice-rt"
 }

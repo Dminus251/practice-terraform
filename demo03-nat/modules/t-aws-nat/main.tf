@@ -1,9 +1,7 @@
 resource "aws_nat_gateway" "nat" {
  
-  count = var.private_subnet-length #private subnet 길이만큼 반복해서 생성
-
-  allocation_id = var.eip-id[count.index] #eip의 id
-  subnet_id     = var.private_subnet-id[count.index] #subnet id
+  allocation_id = var.eip-id #eip의 id
+  subnet_id     = var.subnet-id#subnet id
 
   tags = {
     Name = var.nat-name

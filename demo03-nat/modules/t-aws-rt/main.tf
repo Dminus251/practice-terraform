@@ -7,6 +7,6 @@ resource "aws_route_table" "internet" {
   }
 
   tags = {
-    Name = var.rt-name
+    Name = "prctice-rt-${var.rt-usage}"
   }
 }

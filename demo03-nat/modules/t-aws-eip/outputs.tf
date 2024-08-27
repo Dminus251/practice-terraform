@@ -1,3 +1,4 @@
 output "eip-id" {
-  value = [for i in aws_eip.eip: i.id]
+  value = aws_eip.eip.id
 }
+

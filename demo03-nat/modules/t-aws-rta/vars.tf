@@ -1,11 +1,8 @@
-variable "public_subnet-id" {
-  type = list(string)
+variable "subnet-id" {
+  type = string
 }
 
 variable "rt-id" {
   type = string
 }
 
-variable "public_subnet-length" {
-  type = number
-}

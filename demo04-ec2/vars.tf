@@ -37,3 +37,4 @@ variable "private_subnet-name" {
   type = list(string)
   default = ["private-2a", "private-2c"]
 }
+

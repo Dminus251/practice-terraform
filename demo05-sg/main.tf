@@ -106,7 +106,7 @@ module "ec2_public" {
   ec2-az       = each.key % 2 == 0 ? "ap-northeast-2a" : "ap-northeast-2c"
   ec2-key_name = data.aws_key_pair.example.key_name
   ec2-usage    = "public-${each.key}"
-  ec2-sg       = [module.sg-allow_ssh.sg-id]
+  ec2-sg       = [module.sg-public-allow_ssh.sg-id]
 }
 
 
@@ -117,17 +117,18 @@ module "ec2_private" {
   ec2-az       = each.key % 2 == 0 ? "ap-northeast-2a" : "ap-northeast-2c"
   ec2-key_name = data.aws_key_pair.example.key_name
   ec2-usage    = "private-${each.key}"
-  ec2-sg       = [module.sg-allow_ssh.sg-id]
+  ec2-sg       = [module.sg-private-allow_ssh.sg-id]
 }
 
+#public subnet의 instance에 할당. 0.0.0.0/0에서 ssh를 허용함
 module "sg-public-allow_ssh" { #0.0.0.0/0에서 ssh 허용
   source = "./modules/t-aws-sg"
   sg-vpc_id = module.vpc.vpc-id
   ingress = var.sg-ingress
-  sg-name = "sg"
-  #ingress-allow_ssh = var.sg-ingress
+  sg-name = "sg_public" #sg 이름에 하이픈('-') 사용 불가
 }
 
+#private subnet의 instanec에 할당. public subnet의 cidr에서의 ssh 허용
 module "sg-private-allow_ssh" { #public subnet에서의 ssh 허용
   source = "./modules/t-aws-sg"
   sg-vpc_id = module.vpc.vpc-id
@@ -135,7 +136,8 @@ module "sg-private-allow_ssh" { #public subnet에서의 ssh 허용
     from_port	= var.sg-ingress.from_port
     to_port	= var.sg-ingress.to_port
     protocol	= var.sg-ingress.protocol
-    cidr	= [for subnet in module.public_subnet : subnet["private_subnet-id"]
+    cidr_blocks = var.public_subnet-cidr
+    security_groups = var.sg-ingress.security_groups
   }
-  sg-name = "sg"
+  sg-name = "sg_private"
 }

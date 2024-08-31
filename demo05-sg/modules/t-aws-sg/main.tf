@@ -1,4 +1,5 @@
 resource "aws_security_group" "sg" {
+  name = var.sg-name
   vpc_id = var.sg-vpc_id
 
 #  ingress {
@@ -23,8 +24,5 @@ resource "aws_security_group" "sg" {
     cidr_blocks      = ["0.0.0.0/0"]
   }
   
-  tags	= {
-    Name = var.sg-name
-  }
 }
 

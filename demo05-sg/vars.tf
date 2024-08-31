@@ -50,7 +50,6 @@ variable "sg-ingress" {
     cidr_blocks     = list(string),
     security_groups = list(string),
   })
-
   default = {
    
       from_port       = 22,
@@ -58,7 +57,6 @@ variable "sg-ingress" {
       protocol        = "tcp",  
       cidr_blocks     = ["0.0.0.0/0"],
       security_groups = []
-  
   }
 }
 

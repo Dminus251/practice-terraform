@@ -120,10 +120,22 @@ module "ec2_private" {
   ec2-sg       = [module.sg-allow_ssh.sg-id]
 }
 
-module "sg-allow_ssh" {
+module "sg-public-allow_ssh" { #0.0.0.0/0에서 ssh 허용
   source = "./modules/t-aws-sg"
   sg-vpc_id = module.vpc.vpc-id
   ingress = var.sg-ingress
   sg-name = "sg"
   #ingress-allow_ssh = var.sg-ingress
+}
+
+module "sg-private-allow_ssh" { #public subnet에서의 ssh 허용
+  source = "./modules/t-aws-sg"
+  sg-vpc_id = module.vpc.vpc-id
+  ingress = {
+    from_port	= var.sg-ingress.from_port
+    to_port	= var.sg-ingress.to_port
+    protocol	= var.sg-ingress.protocol
+    cidr	= [for subnet in module.public_subnet : subnet["private_subnet-id"]
+  }
+  sg-name = "sg"
 }

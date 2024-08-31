@@ -1,3 +1,7 @@
+
+variable "cluster-name" {
+  type = string
+}
 variable "cluster-role_arn" {
   type = string
 }

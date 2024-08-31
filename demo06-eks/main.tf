@@ -148,11 +148,51 @@ module "eks-role"{
 
 module "eks-cluster"{ 
   source = "./modules/t-aws-eks/eks_cluster"
+  cluster-name = "yyk-cluster" #일단 하드코딩
   cluster-role_arn = module.eks-role.arn
   cluster-subnet_ids = [ for i in module.private_subnet: i["private_subnet-id"] ]
 }
 
+resource "kubernetes_config_map" "aws_auth" {
+  metadata {
+    name      = "aws-auth"
+    namespace = "kube-system"
+  }
 
+  data = {
+    mapRoles = <<EOF
+- rolearn: ${module.eks-role.arn}
+  username: system:node:{{EC2PrivateDNSName}}
+  groups:
+    - system:bootstrappers
+    - system:nodes
+EOF
+    mapUsers = <<EOF
+- userarn: "arn:aws:iam::992382518527:user/eks-user" #일단 하드코딩
+  username: eks-user
+  groups:
+    - system:masters
+EOF
+  }
+}
+
+#k8s provider의 token을 얻는 데 사용
+data "aws_eks_cluster_auth" "example" {
+  name = module.eks-cluster.cluster-name
+  depends_on = [module.eks-cluster]
+}
+
+#k8s provider의 cluster_ca_certificate를 얻는 데 사용
+data "aws_eks_cluster" "example" {
+  name = module.eks-cluster.cluster-name
+  depends_on = [module.eks-cluster]
+}
+
+provider "kubernetes" {
+  host                   = module.eks-cluster.endpoint
+  token                  = data.aws_eks_cluster_auth.example.token
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.example.certificate_authority[0].data)
+}
 
 
 

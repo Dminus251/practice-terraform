@@ -60,3 +60,8 @@ variable "sg-ingress" {
   }
 }
 
+#eks cluser name
+variable "cluster-name" {
+  type = string
+  default = "yyk-cluster"
+}

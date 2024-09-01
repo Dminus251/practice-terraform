@@ -4,8 +4,8 @@ provider "aws" {
   region     = var.AWS_REGION
 }
 
-provider "kubernetes" {
-  host                   = module.eks-cluster.endpoint
-  token                  = data.aws_eks_cluster_auth.example.token
-  cluster_ca_certificate = base64decode(module.eks-cluster.kubeconfig-certificate-authority-data)
-}
+#provider "kubernetes" {
+#  host                   = module.eks-cluster.endpoint
+#  token                  = data.aws_eks_cluster_auth.example.token
+#  cluster_ca_certificate = base64decode(module.eks-cluster.kubeconfig-certificate-authority-data)
+#}

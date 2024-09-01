@@ -148,7 +148,7 @@ module "eks-role"{
 
 module "eks-cluster"{ 
   source = "./modules/t-aws-eks/cluster"
-  cluster-name = "yyk-cluster" #일단 하드코딩
+  cluster-name = var.cluster-name
   cluster-role_arn = module.eks-role.arn
   cluster-subnet_ids = [ for i in module.private_subnet: i["private_subnet-id"] ]
 }

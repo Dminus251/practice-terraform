@@ -1,8 +1,13 @@
 resource "aws_eks_cluster" "example" {
   name     = var.cluster-name
   role_arn = var.cluster-role_arn
+  
   vpc_config {
     subnet_ids = var.cluster-subnet_ids
+  }
+  access_config {
+    authentication_mode = "API_AND_CONFIG_MAP"
+    bootstrap_cluster_creator_admin_permissions = true
   }
 }
 

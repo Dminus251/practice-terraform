@@ -136,39 +136,63 @@ module "sg-private-allow_ssh" { #public subnet에서의 ssh 허용
   sg-name = "sg_private"
 }
 
+################################ EKS Configuration ###########################
 module "eks-role"{
   source = "./modules/t-aws-eks/role/eks_role"
 }
 
-module "eks-cluster"{ 
-  source = "./modules/t-aws-eks/cluster"
-  cluster-name = var.cluster-name
-  cluster-role_arn = module.eks-role.arn
-  cluster-subnet_ids = [ for i in module.private_subnet: i["private_subnet-id"] ]
+#security group for cluster
+module "sg-cluster" {
+  source = "./modules/t-aws-sg"
+  sg-vpc_id = module.vpc.vpc-id
+  ingress = {
+    from_port	= "443"
+    to_port	= "443" #kuberntes API는 https 사용
+    protocol	= "TCP"
+    cidr_blocks = [] 
+    security_groups = [module.sg-node_group.sg-id]
+  }
+  sg-name = "sg_cluster"
+  depends_on = [module.sg-node_group]
 }
 
+#security group for node_group
+module "sg-node_group" { #0.0.0.0/0에서 ssh 허용
+  source = "./modules/t-aws-sg"
+  sg-vpc_id = module.vpc.vpc-id
+  ingress = var.sg-ingress
+  sg-name = "sg_nodegroup"
+}
 
-#aws-auth configmap을 사용하기 위해 생성했으나, 필요없어짐(액세스 구성 사용)
-#module "eks-configmap_auth" { 
-#  source = "./modules/t-k8s-configmap"
-#  role_arn = module.eks-role.arn
-#}
+module "eks-cluster"{ 
+  source 		= "./modules/t-aws-eks/cluster"
+  cluster-name 		= var.cluster-name
+  cluster-sg		= [module.sg-cluster.sg-id,]
+  cluster-role_arn 	= module.eks-role.arn
+  cluster-subnet_ids 	= [ for i in module.private_subnet: i["private_subnet-id"] ]
+}
 
+#role of node_group
 module "ng-role"{
   source = "./modules/t-aws-eks/role/ng_role"
 }
 
+#launch template for node_group
+module "lt-ng"{
+  source 		 = "./modules/t-aws-launch_template"
+  lt-sg = [module.sg-public-allow_ssh.sg-id]
+  cluster-name = module.eks-cluster.cluster-name
+}
+
 module "node_group"{
   source 	   = "./modules/t-aws-eks/ng"
-  #count = length(module.private_subnet) #왜 하나만 생성되지?? private-2a에만 생성됨
   for_each 	   = {for i, subnet in module.private_subnet: i => subnet}
   cluster-name     = module.eks-cluster.cluster-name
   ng-name 	   = "pracite-ng-${each.key}"
   ng-role_arn      = module.ng-role.arn
-  #subnet-id = module.private_subnet[count.index]["private_subnet-id"]
   subnet-id        =  [each.value["private_subnet-id"]]
-  key = data.aws_key_pair.example.key_name
-  worker_node-name = "practice-node-${each.key}"
+  #key = data.aws_key_pair.example.key_name
+  ng-lt_id = module.lt-ng.lt_id 
   depends_on       = [module.eks-cluster, module.ng-role]
 }
 
@@ -201,3 +225,9 @@ output "map"{
 #    "private_subnet-id" = "subnet-04a40dc056c15bff4"
 #  }
 #}
+#aws-auth configmap을 사용하기 위해 생성했으나, 필요없어짐(액세스 구성 사용)
+#module "eks-configmap_auth" { 
+#  source = "./modules/t-k8s-configmap"
+#  role_arn = module.eks-role.arn
+#}
+

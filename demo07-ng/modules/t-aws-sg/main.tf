@@ -2,13 +2,6 @@ resource "aws_security_group" "sg" {
   name = var.sg-name
   vpc_id = var.sg-vpc_id
 
-#  ingress {
-#    from_port       = var.ingress-from_port
-#    to_port         = var.ingress-to_port
-#    protocol        = var.ingress-protocol
-#    cidr_blocks	    = var.ingress-cidr_blocks
-#    security_groups = var.ingress-security_group
-#  }
   ingress {
     from_port       = var.ingress["from_port"]
     to_port         = var.ingress["to_port"]

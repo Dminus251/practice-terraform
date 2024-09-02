@@ -3,7 +3,8 @@ resource "aws_eks_cluster" "example" {
   role_arn = var.cluster-role_arn
   
   vpc_config {
-    subnet_ids = var.cluster-subnet_ids
+    subnet_ids 		= var.cluster-subnet_ids
+    security_group_ids  = var.cluster-sg
   }
   access_config {
     authentication_mode = "API_AND_CONFIG_MAP"

@@ -9,11 +9,8 @@ resource "aws_eks_node_group" "example" {
     max_size     = 2
     min_size     = 1
   }
-
-  remote_access {
-    ec2_ssh_key = var.key
-  }
   launch_template {
-    name = var.worker_node-name
-  }
+    id      = var.ng-lt_id
+    version = "$Latest"
+  } 
 }

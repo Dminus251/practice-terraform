@@ -15,10 +15,7 @@ variable "subnet-id"{
   type = list(string)
 }
 
-variable "key"{
-  type = string
-}
-
-variable "worker_node-name"{
+variable "ng-lt_id"{
+  description = "id of launch template for node group"
   type = string
 }

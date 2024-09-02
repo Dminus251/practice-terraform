@@ -9,8 +9,8 @@ resource "aws_eks_node_group" "example" {
     max_size     = 2
     min_size     = 1
   }
-  launch_template {
-    id      = var.ng-lt_id
-    version = "$Latest"
-  } 
+  #launch_template {
+  #  id      = var.ng-lt_id
+  #  version = "$Latest"
+  #} 
 }

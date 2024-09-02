@@ -145,8 +145,7 @@ module "eks-role"{
 module "sg-cluster" {
   source = "./modules/t-aws-sg"
   sg-vpc_id = module.vpc.vpc-id
-  ingress = {
-    from_port	= "443"
+  ingress = { from_port	= "443"
     to_port	= "443" #kuberntes API는 https 사용
     protocol	= "TCP"
     cidr_blocks = [] 
@@ -160,7 +159,12 @@ module "sg-cluster" {
 module "sg-node_group" { #0.0.0.0/0에서 ssh 허용
   source = "./modules/t-aws-sg"
   sg-vpc_id = module.vpc.vpc-id
-  ingress = var.sg-ingress
+  ingress = { from_port	= "443"
+    to_port	= "443" #kuberntes API는 https 사용
+    protocol	= "TCP"
+    cidr_blocks = [] 
+    security_groups = []#여기 어떻게 변경해야 하지..?
+  }
   sg-name = "sg_nodegroup"
 }
 
@@ -180,8 +184,8 @@ module "ng-role"{
 #launch template for node_group
 module "lt-ng"{
   source 		 = "./modules/t-aws-launch_template"
-  lt-sg = [module.sg-public-allow_ssh.sg-id]
   cluster-name = module.eks-cluster.cluster-name
+  lt-sg = [module.sg-node_group.sg-id]
 }
 
 module "node_group"{

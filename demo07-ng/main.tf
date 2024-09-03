@@ -74,8 +74,6 @@ module "rta-internet_to_nat" { #Associate route_table-internet_to_nat with Priva
   rt-id = module.route_table-internet_to_nat[count.index].rt-id
 }
 
-
-
 #module "ec2" {
 #  #현재 인프라는 public subnet 2개, private subnet 2개임
 #  #서브넷 확장 시 수정 필요
@@ -141,33 +139,6 @@ module "eks-role"{
   source = "./modules/t-aws-eks/role/eks_role"
 }
 
-#security group for cluster
-#module "sg-cluster" {
-#  source = "./modules/t-aws-sg"
-#  sg-vpc_id = module.vpc.vpc-id
-#  ingress = { from_port	= "443"
-#    to_port	= "443" #kuberntes API는 https 사용
-#   protocol	= "TCP"
-#    cidr_blocks = [] 
-#    security_groups = [module.sg-node_group.sg-id]
-#  }
-#  sg-name = "sg_cluster"
-#  depends_on = [module.sg-node_group]
-#}
-
-#security group for node_group
-#module "sg-node_group" { #0.0.0.0/0에서 ssh 허용
-#  source = "./modules/t-aws-sg"
-#  sg-vpc_id = module.vpc.vpc-id
-#  ingress = { from_port	= "443"
-#    to_port	= "443" #kuberntes API는 https 사용
-#    protocol	= "TCP"
-#    cidr_blocks = [] 
-#    security_groups = []#클러스터의 보안 그룹을 허용하도록 하자..
-#  }
-#  sg-name = "sg_nodegroup"
-#}
-
 module "sg-cluster" {
   source     = "./modules/t-aws-sg_test"
   sg-vpc_id  = module.vpc.vpc-id
@@ -180,34 +151,39 @@ module "sg-node_group" {
   sg-name    = "sg_nodegroup"
 }
 
-# Allow HTTPS traffic from Node Group to EKS Cluster
-resource "aws_security_group_rule" "node_to_cluster" {
-  type              = "ingress"
-  from_port         = 443
-  to_port           = 443
-  protocol          = "tcp"
-  security_group_id = module.sg-cluster.sg-id  # 클러스터의 보안 그룹
-  source_security_group_id = module.sg-node_group.sg-id  # 노드 그룹의 보안 그룹
+#클러스터의 추가 sg에서, 노드 그룹 sg의 ingress traffic 허용, 근데 필요한가?
+#클러스터 보안 그룹과 클러스터 추가 보안 그룹 차이점 알아보자
+module "sg_rule-cluster" {
+  source = "./modules/t-aws-sg_rule"
+  sg_rule-type = "ingress"
+  sg_rule-from_port = 443
+  sg_rule-to_port = 443
+  sg_rule-protocol = "tcp"
+  sg_rule-sg_id = module.sg-cluster.sg-id #규칙을 적용할 sg
+  sg_rule-source_sg_id = module.sg-node_group.sg-id #허용할 sg
 }
 
-# Allow HTTPS traffic from EKS Cluster to Node Group
-resource "aws_security_group_rule" "cluster_to_node" {
-  type              = "ingress"
-  from_port         = 443
-  to_port           = 443
-  protocol          = "tcp"
-  security_group_id = module.sg-node_group.sg-id  # 노드 그룹의 보안 그룹
-  source_security_group_id = module.sg-cluster.sg-id  # 클러스터의 보안 그룹
+
+#노드 그룹의 sg에서 클러스터 sg의 ingress traffic 허용
+module "sg_rule-ng" {
+  source = "./modules/t-aws-sg_rule"
+  sg_rule-type = "ingress"
+  sg_rule-from_port = 443
+  sg_rule-to_port = 443
+  sg_rule-protocol = "tcp"
+  sg_rule-sg_id = module.sg-node_group.sg-id #규칙을 적용할 sg
+  sg_rule-source_sg_id = module.sg-cluster.sg-id #허용할 sg
 }
 
 #클러스터 메인 보안 그룹
-resource "aws_security_group_rule" "cluster_to_node-main" {
-  type              = "ingress"
-  from_port         = 443
-  to_port           = 443
-  protocol          = "tcp"
-  security_group_id = module.eks-cluster.cluster-sg # 규칙을 적용할 sg
-  source_security_group_id = module.sg-node_group.sg-id #로부터의 트래픽 허용
+module "sg_rule-main_cluster" {
+  source = "./modules/t-aws-sg_rule"
+  sg_rule-type = "ingress"
+  sg_rule-from_port = 443
+  sg_rule-to_port = 443
+  sg_rule-protocol = "tcp"
+  sg_rule-sg_id = module.eks-cluster.cluster-sg #규칙을 적용할 sg
+  sg_rule-source_sg_id = module.sg-node_group.sg-id #허용할 sg
   depends_on = [module.eks-cluster]
 }
 

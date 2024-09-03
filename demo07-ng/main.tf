@@ -142,31 +142,97 @@ module "eks-role"{
 }
 
 #security group for cluster
-module "sg-cluster" {
-  source = "./modules/t-aws-sg"
-  sg-vpc_id = module.vpc.vpc-id
-  ingress = { from_port	= "443"
-    to_port	= "443" #kuberntes API는 https 사용
-    protocol	= "TCP"
-    cidr_blocks = [] 
-    security_groups = [module.sg-node_group.sg-id]
-  }
-  sg-name = "sg_cluster"
-  depends_on = [module.sg-node_group]
-}
+#module "sg-cluster" {
+#  source = "./modules/t-aws-sg"
+#  sg-vpc_id = module.vpc.vpc-id
+#  ingress = { from_port	= "443"
+#    to_port	= "443" #kuberntes API는 https 사용
+#   protocol	= "TCP"
+#    cidr_blocks = [] 
+#    security_groups = [module.sg-node_group.sg-id]
+#  }
+#  sg-name = "sg_cluster"
+#  depends_on = [module.sg-node_group]
+#}
 
 #security group for node_group
-module "sg-node_group" { #0.0.0.0/0에서 ssh 허용
-  source = "./modules/t-aws-sg"
-  sg-vpc_id = module.vpc.vpc-id
-  ingress = { from_port	= "443"
-    to_port	= "443" #kuberntes API는 https 사용
-    protocol	= "TCP"
-    cidr_blocks = [] 
-    security_groups = []#클러스터의 보안 그룹을 허용하도록 하자..
-  }
-  sg-name = "sg_nodegroup"
+#module "sg-node_group" { #0.0.0.0/0에서 ssh 허용
+#  source = "./modules/t-aws-sg"
+#  sg-vpc_id = module.vpc.vpc-id
+#  ingress = { from_port	= "443"
+#    to_port	= "443" #kuberntes API는 https 사용
+#    protocol	= "TCP"
+#    cidr_blocks = [] 
+#    security_groups = []#클러스터의 보안 그룹을 허용하도록 하자..
+#  }
+#  sg-name = "sg_nodegroup"
+#}
+
+module "sg-cluster" {
+  source     = "./modules/t-aws-sg_test"
+  sg-vpc_id  = module.vpc.vpc-id
+  sg-name    = "sg_cluster"
 }
+
+module "sg-node_group" { 
+  source     = "./modules/t-aws-sg_test"
+  sg-vpc_id  = module.vpc.vpc-id
+  sg-name    = "sg_nodegroup"
+}
+
+# Allow HTTPS traffic from Node Group to EKS Cluster
+resource "aws_security_group_rule" "node_to_cluster" {
+  type              = "ingress"
+  from_port         = 443
+  to_port           = 443
+  protocol          = "tcp"
+  security_group_id = module.sg-cluster.sg-id  # 클러스터의 보안 그룹
+  source_security_group_id = module.sg-node_group.sg-id  # 노드 그룹의 보안 그룹
+}
+
+# Allow HTTPS traffic from EKS Cluster to Node Group
+resource "aws_security_group_rule" "cluster_to_node" {
+  type              = "ingress"
+  from_port         = 443
+  to_port           = 443
+  protocol          = "tcp"
+  security_group_id = module.sg-node_group.sg-id  # 노드 그룹의 보안 그룹
+  source_security_group_id = module.sg-cluster.sg-id  # 클러스터의 보안 그룹
+}
+
+#클러스터 메인 보안 그룹
+resource "aws_security_group_rule" "cluster_to_node-main" {
+  type              = "ingress"
+  from_port         = 443
+  to_port           = 443
+  protocol          = "tcp"
+  security_group_id = module.eks-cluster.cluster-sg # 규칙을 적용할 sg
+  source_security_group_id = module.sg-node_group.sg-id #로부터의 트래픽 허용
+  depends_on = [module.eks-cluster]
+}
+
+output "cluster-main-sg"{
+  value = module.eks-cluster.cluster-sg
+}
+
+resource "aws_security_group_rule" "cluster_outbound" {
+  type              = "egress"
+  from_port         = 0 #protocol이 -1인 경우 0으로 고정해야 함
+  to_port           = 0 #마찬가지
+  protocol          = "-1"  # -1 means all protocols
+  security_group_id = module.sg-cluster.sg-id  # 클러스터 보안 그룹
+  cidr_blocks       = ["0.0.0.0/0"]
+}
+
+resource "aws_security_group_rule" "node_outbound" {
+  type              = "egress"
+  from_port         = 0
+  to_port           = 0
+  protocol          = "-1"  # -1 means all protocols
+  security_group_id = module.sg-node_group.sg-id  # 노드 그룹 보안 그룹
+  cidr_blocks       = ["0.0.0.0/0"]
+}
+
 
 module "eks-cluster"{ 
   source 		= "./modules/t-aws-eks/cluster"

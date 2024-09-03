@@ -12,3 +12,7 @@ output "test" {
 output "cluster-name" {
   value = var.cluster-name
 }
+
+output "cluster-sg" {
+  value = aws_eks_cluster.example.vpc_config[0].cluster_security_group_id
+}

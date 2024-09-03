@@ -163,7 +163,7 @@ module "sg-node_group" { #0.0.0.0/0에서 ssh 허용
     to_port	= "443" #kuberntes API는 https 사용
     protocol	= "TCP"
     cidr_blocks = [] 
-    security_groups = []#여기 어떻게 변경해야 하지..?
+    security_groups = []#클러스터의 보안 그룹을 허용하도록 하자..
   }
   sg-name = "sg_nodegroup"
 }

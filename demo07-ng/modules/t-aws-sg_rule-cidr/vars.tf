@@ -16,6 +16,6 @@ variable "sg_rule-protocol" {
 variable "sg_rule-sg_id" {
   type = string
 }
-variable "sg_rule-source_sg_id" {
-  type = string
+variable "sg_rule-cidr_blocks" {
+  type = list(string)
 }

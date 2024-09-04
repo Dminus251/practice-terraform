@@ -183,24 +183,44 @@ output "cluster-main-sg"{
   value = module.eks-cluster.cluster-sg
 }
 
-resource "aws_security_group_rule" "cluster_outbound" {
-  type              = "egress"
-  from_port         = 0 #protocol이 -1인 경우 0으로 고정해야 함
-  to_port           = 0 #마찬가지
-  protocol          = "-1"  # -1 means all protocols
-  security_group_id = module.sg-cluster.sg-id  # 클러스터 보안 그룹
-  cidr_blocks       = ["0.0.0.0/0"]
+#resource "aws_security_group_rule" "cluster_outbound" {
+#  type              = "egress"
+#  from_port         = 0 #protocol이 -1인 경우 0으로 고정해야 함
+#  to_port           = 0 #마찬가지
+#  protocol          = "-1"  # -1 means all protocols
+#  security_group_id = module.sg-cluster.sg-id  # 클러스터 보안 그룹
+#  cidr_blocks       = ["0.0.0.0/0"]
+#}
+
+module "sg_rule-cluster-outbound" {
+  source = "./modules/t-aws-sg_rule-cidr"
+  sg_rule-type = "egress"
+  sg_rule-from_port = 0
+  sg_rule-to_port = 0
+  sg_rule-protocol = "-1"
+  sg_rule-sg_id = module.sg-cluster.sg-id #규칙을 적용할 sg
+  sg_rule-cidr_blocks = ["0.0.0.0/0"] #허용할 cidr
 }
 
-resource "aws_security_group_rule" "node_outbound" {
-  type              = "egress"
-  from_port         = 0
-  to_port           = 0
-  protocol          = "-1"  # -1 means all protocols
-  security_group_id = module.sg-node_group.sg-id  # 노드 그룹 보안 그룹
-  cidr_blocks       = ["0.0.0.0/0"]
-}
+#resource "aws_security_group_rule" "node_outbound" {
+#  type              = "egress"
+#  from_port         = 0
+#  to_port           = 0
+#  protocol          = "-1"  # -1 means all protocols
+#  security_group_id = module.sg-node_group.sg-id  # 노드 그룹 보안 그룹
+#  cidr_blocks       = ["0.0.0.0/0"]
+#}
 
+
+module "sg_rule-ng-outbound" {
+  source = "./modules/t-aws-sg_rule-cidr"
+  sg_rule-type = "egress"
+  sg_rule-from_port = 0
+  sg_rule-to_port = 0
+  sg_rule-protocol = "-1"
+  sg_rule-sg_id = module.sg-node_group.sg-id #규칙을 적용할 sg
+  sg_rule-cidr_blocks = ["0.0.0.0/0"] #허용할 cidr
+}
 
 module "eks-cluster"{ 
   source 		= "./modules/t-aws-eks/cluster"

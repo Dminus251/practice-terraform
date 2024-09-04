@@ -116,7 +116,6 @@ module "ec2_private" {
 module "sg-public-allow_ssh" { #0.0.0.0/0에서 ssh 허용
   source = "./modules/t-aws-sg"
   sg-vpc_id = module.vpc.vpc-id
-  ingress = var.sg-ingress
   sg-name = "sg_public" #sg 이름에 하이픈('-') 사용 불가
 }
 
@@ -124,13 +123,6 @@ module "sg-public-allow_ssh" { #0.0.0.0/0에서 ssh 허용
 module "sg-private-allow_ssh" { #public subnet에서의 ssh 허용
   source = "./modules/t-aws-sg"
   sg-vpc_id = module.vpc.vpc-id
-  ingress = {
-    from_port	= var.sg-ingress.from_port
-    to_port	= var.sg-ingress.to_port
-    protocol	= var.sg-ingress.protocol
-    cidr_blocks = var.public_subnet-cidr
-    security_groups = var.sg-ingress.security_groups
-  }
   sg-name = "sg_private"
 }
 
@@ -140,13 +132,13 @@ module "eks-role"{
 }
 
 module "sg-cluster" {
-  source     = "./modules/t-aws-sg_test"
+  source     = "./modules/t-aws-sg"
   sg-vpc_id  = module.vpc.vpc-id
   sg-name    = "sg_cluster"
 }
 
 module "sg-node_group" { 
-  source     = "./modules/t-aws-sg_test"
+  source     = "./modules/t-aws-sg"
   sg-vpc_id  = module.vpc.vpc-id
   sg-name    = "sg_nodegroup"
 }
@@ -154,7 +146,7 @@ module "sg-node_group" {
 #클러스터의 추가 sg에서, 노드 그룹 sg의 ingress traffic 허용, 근데 필요한가?
 #클러스터 보안 그룹과 클러스터 추가 보안 그룹 차이점 알아보자
 module "sg_rule-cluster" {
-  source = "./modules/t-aws-sg_rule"
+  source = "./modules/t-aws-sg_rule-sg"
   sg_rule-type = "ingress"
   sg_rule-from_port = 443
   sg_rule-to_port = 443
@@ -166,7 +158,7 @@ module "sg_rule-cluster" {
 
 #노드 그룹의 sg에서 클러스터 sg의 ingress traffic 허용
 module "sg_rule-ng" {
-  source = "./modules/t-aws-sg_rule"
+  source = "./modules/t-aws-sg_rule-sg"
   sg_rule-type = "ingress"
   sg_rule-from_port = 443
   sg_rule-to_port = 443
@@ -177,7 +169,7 @@ module "sg_rule-ng" {
 
 #클러스터 메인 보안 그룹
 module "sg_rule-main_cluster" {
-  source = "./modules/t-aws-sg_rule"
+  source = "./modules/t-aws-sg_rule-sg"
   sg_rule-type = "ingress"
   sg_rule-from_port = 443
   sg_rule-to_port = 443

@@ -74,16 +74,6 @@ module "rta-internet_to_nat" { #Associate route_table-internet_to_nat with Priva
   rt-id = module.route_table-internet_to_nat[count.index].rt-id
 }
 
-#module "ec2" {
-#  #현재 인프라는 public subnet 2개, private subnet 2개임
-#  #서브넷 확장 시 수정 필요
-#  source = "./modules/t-aws-ec2"
-#  count = length(module.public_subnet) + length(module.private_subnet)
-#  ec2-subnet = count.index < 2 ? module.public_subnet[count.index] : module.private_subnet[count.index-2] #index 내 연산 불가
-#  ec2-az =  count.index % 2 == 0 ? "ap-northeast-2a" : "ap-northeast-2c"
-#  ec2-key_name = "0828"
-#  ec2-usage = count.index < 2 ? "public-${count.index}" : "private-${count.index}"
-#}
 
 #key_name이 0827인 key_pair 찾아옴
 data "aws_key_pair" "example" {
@@ -99,17 +89,6 @@ module "ec2_public" {
   ec2-key_name = data.aws_key_pair.example.key_name
   ec2-usage    = "public-${each.key}"
   ec2-sg       = [module.sg-public-allow_ssh.sg-id]
-}
-
-
-module "ec2_private" {
-  source = "./modules/t-aws-ec2"
-  for_each = { for i, subnet in module.private_subnet : i => subnet["private_subnet-id"]}
-  ec2-subnet   = each.value
-  ec2-az       = each.key % 2 == 0 ? "ap-northeast-2a" : "ap-northeast-2c"
-  ec2-key_name = data.aws_key_pair.example.key_name
-  ec2-usage    = "private-${each.key}"
-  ec2-sg       = [module.sg-private-allow_ssh.sg-id]
 }
 
 #public subnet의 instance에 할당. 0.0.0.0/0에서 ssh를 허용함

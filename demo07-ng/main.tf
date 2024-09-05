@@ -154,25 +154,36 @@ module "sg-node_group" {
 #클러스터의 추가 sg에서, 노드 그룹 sg의 ingress traffic 허용, 근데 필요한가?
 #클러스터 보안 그룹과 클러스터 추가 보안 그룹 차이점 알아보자
 module "sg_rule-cluster" {
-  source = "./modules/t-aws-sg_rule-sg"
-  sg_rule-type = "ingress"
-  sg_rule-from_port = 443
-  sg_rule-to_port = 443
-  sg_rule-protocol = "tcp"
-  sg_rule-sg_id = module.sg-cluster.sg-id #규칙을 적용할 sg
+  source 	       = "./modules/t-aws-sg_rule-sg"
+  sg_rule-type         = "ingress"
+  sg_rule-from_port    = 443
+  sg_rule-to_port      = 443
+  sg_rule-protocol     = "tcp"
+  sg_rule-sg_id	       = module.sg-cluster.sg-id #규칙을 적용할 sg
   sg_rule-source_sg_id = module.sg-node_group.sg-id #허용할 sg
 }
 
 
 #노드 그룹의 sg에서 클러스터 sg의 ingress traffic 허용
-module "sg_rule-ng" {
-  source = "./modules/t-aws-sg_rule-sg"
-  sg_rule-type = "ingress"
-  sg_rule-from_port = 443
-  sg_rule-to_port = 443
-  sg_rule-protocol = "tcp"
-  sg_rule-sg_id = module.sg-node_group.sg-id #규칙을 적용할 sg
+module "sg_rule-ng-allow_https-from_cluster" {
+  source 	       = "./modules/t-aws-sg_rule-sg"
+  sg_rule-type         = "ingress"
+  sg_rule-from_port    = 443
+  sg_rule-to_port      = 443
+  sg_rule-protocol     = "tcp"
+  sg_rule-sg_id        = module.sg-node_group.sg-id #규칙을 적용할 sg
   sg_rule-source_sg_id = module.sg-cluster.sg-id #허용할 sg
+}
+
+#노드 그룹의 sg에서 public subnet의 ssh ingress 허용
+module "sg_rule-ng-allow_ssh-from_public_subnet" {
+  source 	       = "./modules/t-aws-sg_rule-sg"
+  sg_rule-type 	       = "ingress"
+  sg_rule-from_port    = 22
+  sg_rule-to_port      = 22
+  sg_rule-protocol     = "tcp"
+  sg_rule-sg_id        = module.sg-node_group.sg-id #규칙을 적용할 sg
+  sg_rule-source_sg_id = module.sg-public_ec2.sg-id #허용할 sg
 }
 
 #클러스터 메인 보안 그룹
@@ -202,8 +213,6 @@ module "sg_rule-cluster-outbound" {
   sg_rule-cidr_blocks = local.all_ips #허용할 cidr
 }
 
-
-
 module "sg_rule-ng-outbound" {
   source = "./modules/t-aws-sg_rule-cidr"
   sg_rule-type = "egress"
@@ -232,7 +241,7 @@ module "lt-ng"{
   source 	= "./modules/t-aws-launch_template"
   cluster-name 	= module.eks-cluster.cluster-name
   lt-sg 	= [module.sg-node_group.sg-id]
-  lt-keyname	= data.aws_key_pair.example.key_name
+  lt-key_name	= data.aws_key_pair.example.key_name
 }
 
 module "node_group"{
@@ -246,8 +255,6 @@ module "node_group"{
   ng-lt_id         = module.lt-ng.lt_id 
   depends_on       = [module.eks-cluster, module.ng-role]
 }
-
-
 
 output "private_subnet" {
   value = module.private_subnet

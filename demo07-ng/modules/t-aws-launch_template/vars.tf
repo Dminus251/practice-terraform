@@ -20,5 +20,5 @@ variable "cluster-name"{
 }
 
 variable "lt-key_name"{
-  type = strirng
+  type = string
 }

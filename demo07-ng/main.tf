@@ -229,9 +229,10 @@ module "ng-role"{
 
 #launch template for node_group
 module "lt-ng"{
-  source 		 = "./modules/t-aws-launch_template"
-  cluster-name = module.eks-cluster.cluster-name
-  lt-sg = [module.sg-node_group.sg-id]
+  source 	= "./modules/t-aws-launch_template"
+  cluster-name 	= module.eks-cluster.cluster-name
+  lt-sg 	= [module.sg-node_group.sg-id]
+  lt-keyname	= data.aws_key_pair.example.key_name
 }
 
 module "node_group"{

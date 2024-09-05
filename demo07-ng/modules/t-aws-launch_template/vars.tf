@@ -18,3 +18,7 @@ variable "lt-sg" {
 variable "cluster-name"{
   type = string
 }
+
+variable "lt-key_name"{
+  type = strirng
+}

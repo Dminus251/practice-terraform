@@ -118,7 +118,7 @@ module "sg-public_ec2" { #
 }
 
 #Security Group Rule for  sg-public_ec2
-module "sg_rule-cluster-outbound" {
+module "sg_rule-public_ec2-outbound" {
   source = "./modules/t-aws-sg_rule-cidr"
   sg_rule-type = "ingress"
   sg_rule-from_port = 22

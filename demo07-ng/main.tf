@@ -1,16 +1,20 @@
 locals {
-  http_port    = 80
   any_port     = 0
   any_protocol = "-1"
   tcp_protocol = "tcp"
   all_ips      = ["0.0.0.0/0"]
 }
 
-module "vpc" { #VPC
+
+############################ NETWORK Configuration ###########################
+
+#VPC
+module "vpc" { 
   source = "./modules/t-aws-vpc"
 }
 
-module "public_subnet" { #Public Subnet
+#Public Subnet
+module "public_subnet" { 
   source 	     = "./modules/t-aws-public_subnet"
   count 	     = length(var.public_subnet-cidr)
   vpc-id	     = module.vpc.vpc-id
@@ -19,6 +23,7 @@ module "public_subnet" { #Public Subnet
   public_subnet-name = var.public_subnet-name[count.index]
 }
 
+#Private Subnet
 module "private_subnet" { #Private Subnet
   source 	      = "./modules/t-aws-private_subnet"
   count 	      = length(var.private_subnet-cidr)
@@ -28,46 +33,53 @@ module "private_subnet" { #Private Subnet
   private_subnet-name = var.private_subnet-name[count.index]
 }
 
-module "igw" { #Internet Gateway
+#Internet Gateway
+module "igw" { 
   source = "./modules/t-aws-igw"
   vpc-id = module.vpc.vpc-id
 }
 
-module "route_table-igw_to_vpc" { #Route Internet Traffic To IGW
-  source = "./modules/t-aws-rt"
-  vpc-id = module.vpc.vpc-id
+#Route Table: From 0.0.0.0/0 to IGW
+module "route_table-igw_to_vpc" {
+  source     = "./modules/t-aws-rt"
+  vpc-id     = module.vpc.vpc-id
   gateway-id = module.igw.igw-id
-  rt-usage = "igw"
+  rt-usage   = "igw"
 }
 
-module "rta-internet_to_public_subnet" { #Associate route_table-igw_to_vpc with Public Subnet
-  source = "./modules/t-aws-rta"
-  count = length(module.public_subnet) #이만큼 반복해서 모듈 생성
+#Associate Route Table: route_table_igw_to_vpc with Public Subnet
+module "rta-internet_to_public_subnet" {
+  source    = "./modules/t-aws-rta"
+  count     = length(module.public_subnet) #이만큼 반복해서 모듈 생성
   subnet-id = module.public_subnet[count.index].public_subnet-id
-  rt-id = module.route_table-igw_to_vpc.rt-id
+  rt-id     = module.route_table-igw_to_vpc.rt-id
 }
 
-module "eip" { #Elastic IP
+#Elastic IP
+module "eip" {
   source = "./modules/t-aws-eip"
-  count = length(module.private_subnet)
+  count  = length(module.private_subnet)
 }
 
+#NAT Gateway
 module "nat" { #NAT Gateway
-  source = "./modules/t-aws-nat"
-  count = length(module.private_subnet)
-  eip-id = module.eip[count.index].eip-id
+  source    = "./modules/t-aws-nat"
+  count     = length(module.private_subnet)
+  eip-id    = module.eip[count.index].eip-id
   subnet-id = module.public_subnet[count.index].public_subnet-id  #nat는 public subnet에 위치해야 함
 }
 
-module "route_table-internet_to_nat" { #Route Internet Traffic to NAT
-  source = "./modules/t-aws-rt"
-  count = length(module.private_subnet)
-  vpc-id = module.vpc.vpc-id
+#Route Table: 0.0.0.0/0 to NAT
+module "route_table-internet_to_nat" { 
+  source     = "./modules/t-aws-rt"
+  count      = length(module.private_subnet)
+  vpc-id     = module.vpc.vpc-id
   gateway-id = module.nat[count.index].nat-id
-  rt-usage = "nat"
+  rt-usage   = "nat"
 }
 
-module "rta-internet_to_nat" { #Associate route_table-internet_to_nat with Private Subnet
+#Associate Route Table: route_table_internet_to_nat with Private Subnet
+module "rta-internet_to_nat" { 
   count = length(module.private_subnet)
   source = "./modules/t-aws-rta"
   subnet-id = module.private_subnet[count.index].private_subnet-id
@@ -81,9 +93,16 @@ data "aws_key_pair" "example" {
   include_public_key = true
 
 }
+
+
+################################ EC2 Configuration ###########################
+#pirvate ec2는 eks가 관리하니까 private sg 지워도 될 것 같고 public ec2 sg에 rule 추가해야될 것 같은데
+#모듈 바꾸면서 지워졌나??
+
+#Public EC2
 module "ec2_public" {
-  source = "./modules/t-aws-ec2"
-  for_each = { for i, subnet in module.public_subnet : i => subnet["public_subnet-id"] } # public subnet을 우선으로 반복
+  source       = "./modules/t-aws-ec2"
+  for_each     = { for i, subnet in module.public_subnet : i => subnet["public_subnet-id"] } # public subnet을 우선으로 반복
   ec2-subnet   = each.value
   ec2-az       = each.key % 2 == 0 ? "ap-northeast-2a" : "ap-northeast-2c"
   ec2-key_name = data.aws_key_pair.example.key_name
@@ -91,15 +110,15 @@ module "ec2_public" {
   ec2-sg       = [module.sg-public-allow_ssh.sg-id]
 }
 
-#public subnet의 instance에 할당. 0.0.0.0/0에서 ssh를 허용함
-module "sg-public-allow_ssh" { #0.0.0.0/0에서 ssh 허용
-  source = "./modules/t-aws-sg"
-  sg-vpc_id = module.vpc.vpc-id
-  sg-name = "sg_public" #sg 이름에 하이픈('-') 사용 불가
+#Securty Group for Public EC2
+module "sg-public-allow_ssh" { #
+  source    = "./modules/t-aws-sg"
+  sg-vpc_id = module.vpc.vpc-id 
+  sg-name   = "sg_public" #sg 이름에 하이픈('-') 사용 불가
 }
 
-#private subnet의 instanec에 할당. public subnet의 cidr에서의 ssh 허용
-module "sg-private-allow_ssh" { #public subnet에서의 ssh 허용
+#Security Group for Priavte EC2
+module "sg-private-allow_ssh" { 
   source = "./modules/t-aws-sg"
   sg-vpc_id = module.vpc.vpc-id
   sg-name = "sg_private"
@@ -162,43 +181,27 @@ output "cluster-main-sg"{
   value = module.eks-cluster.cluster-sg
 }
 
-#resource "aws_security_group_rule" "cluster_outbound" {
-#  type              = "egress"
-#  from_port         = 0 #protocol이 -1인 경우 0으로 고정해야 함
-#  to_port           = 0 #마찬가지
-#  protocol          = "-1"  # -1 means all protocols
-#  security_group_id = module.sg-cluster.sg-id  # 클러스터 보안 그룹
-#  cidr_blocks       = ["0.0.0.0/0"]
-#}
 
 module "sg_rule-cluster-outbound" {
   source = "./modules/t-aws-sg_rule-cidr"
   sg_rule-type = "egress"
-  sg_rule-from_port = 0
-  sg_rule-to_port = 0
-  sg_rule-protocol = "-1"
+  sg_rule-from_port = local.any_port
+  sg_rule-to_port = local.any_port
+  sg_rule-protocol = local.any_protocol
   sg_rule-sg_id = module.sg-cluster.sg-id #규칙을 적용할 sg
-  sg_rule-cidr_blocks = ["0.0.0.0/0"] #허용할 cidr
+  sg_rule-cidr_blocks = local.all_ips #허용할 cidr
 }
 
-#resource "aws_security_group_rule" "node_outbound" {
-#  type              = "egress"
-#  from_port         = 0
-#  to_port           = 0
-#  protocol          = "-1"  # -1 means all protocols
-#  security_group_id = module.sg-node_group.sg-id  # 노드 그룹 보안 그룹
-#  cidr_blocks       = ["0.0.0.0/0"]
-#}
 
 
 module "sg_rule-ng-outbound" {
   source = "./modules/t-aws-sg_rule-cidr"
   sg_rule-type = "egress"
-  sg_rule-from_port = 0
-  sg_rule-to_port = 0
-  sg_rule-protocol = "-1"
+  sg_rule-from_port = local.any_port
+  sg_rule-to_port = local.any_port
+  sg_rule-protocol = local.any_protocol
   sg_rule-sg_id = module.sg-node_group.sg-id #규칙을 적용할 sg
-  sg_rule-cidr_blocks = ["0.0.0.0/0"] #허용할 cidr
+  sg_rule-cidr_blocks = local.all_ips #허용할 cidr
 }
 
 module "eks-cluster"{ 
@@ -229,7 +232,7 @@ module "node_group"{
   ng-role_arn      = module.ng-role.arn
   subnet-id        =  [each.value["private_subnet-id"]]
   #key = data.aws_key_pair.example.key_name
-  ng-lt_id = module.lt-ng.lt_id 
+  ng-lt_id         = module.lt-ng.lt_id 
   depends_on       = [module.eks-cluster, module.ng-role]
 }
 

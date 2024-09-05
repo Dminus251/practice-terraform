@@ -107,22 +107,32 @@ module "ec2_public" {
   ec2-az       = each.key % 2 == 0 ? "ap-northeast-2a" : "ap-northeast-2c"
   ec2-key_name = data.aws_key_pair.example.key_name
   ec2-usage    = "public-${each.key}"
-  ec2-sg       = [module.sg-public-allow_ssh.sg-id]
+  ec2-sg       = [module.sg-public_ec2.sg-id]
 }
 
 #Securty Group for Public EC2
-module "sg-public-allow_ssh" { #
+module "sg-public_ec2" { #
   source    = "./modules/t-aws-sg"
   sg-vpc_id = module.vpc.vpc-id 
   sg-name   = "sg_public" #sg 이름에 하이픈('-') 사용 불가
 }
 
-#Security Group for Priavte EC2
-module "sg-private-allow_ssh" { 
-  source = "./modules/t-aws-sg"
-  sg-vpc_id = module.vpc.vpc-id
-  sg-name = "sg_private"
+#Security Group Rule for  sg-public_ec2
+module "sg_rule-cluster-outbound" {
+  source = "./modules/t-aws-sg_rule-cidr"
+  sg_rule-type = "ingress"
+  sg_rule-from_port = 22
+  sg_rule-to_port = 22
+  sg_rule-protocol = "tcp"
+  sg_rule-sg_id = module.sg-public_ec2.sg-id #규칙을 적용할 sg
+  sg_rule-cidr_blocks = local.all_ips #허용할 cidr
 }
+#Security Group for Priavte EC2
+#module "sg-private-allow_ssh" { 
+#  source = "./modules/t-aws-sg"
+#  sg-vpc_id = module.vpc.vpc-id
+#  sg-name = "sg_private"
+#}
 
 ################################ EKS Configuration ###########################
 module "eks-role"{

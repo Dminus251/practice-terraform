@@ -1,0 +1,27 @@
+{
+  "apiVersion":"rbac.authorization.k8s.io/v1",
+  "kind":"ClusterRoleBinding",
+  "metadata":{"annotations":{},
+  "labels":{"eks.amazonaws.com/component":"node"},"name":"eks:node-bootstrapper"},"roleRef":{"apiGroup":"rbac.authorization.k8s.io","kind":"ClusterRole","name":"eks:node-bootstrapper"},"subjects":[{"apiGroup":"rbac.authorization.k8s.io","kind":"Group","name":"system:bootstrappers"},{"apiGroup":"rbac.authorization.k8s.io","kind":"Group","name":"system:nodes"}]}
+    creationTimestamp: "2024-09-05T07:39:33Z"
+    labels:
+      eks.amazonaws.com/component: node
+    name: eks:node-bootstrapper
+    resourceVersion: "291"
+    uid: 29b41734-3655-4e65-9e6c-6b111fce68cd
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: eks:node-bootstrapper
+--
+    name: system:nodes
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: ClusterRoleBinding
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"rbac.authorization.k8s.io/v1","kind":"ClusterRoleBinding","metadata":{"annotations":{},"name":"eks:node-manager"},"roleRef":{"apiGroup":"rbac.authorization.k8s.io","kind":"ClusterRole","name":"eks:node-manager"},"subjects":[{"apiGroup":"rbac.authorization.k8s.io","kind":"User","name":"eks:node-manager"}]}
+    creationTimestamp: "2024-09-05T07:39:32Z"
+    name: eks:node-manager
+    resourceVersion: "276"
+    uid: c46319e7-a040-45a8-a16c-2c0638d93b32

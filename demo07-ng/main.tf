@@ -117,8 +117,8 @@ module "sg-public_ec2" { #
   sg-name   = "sg_public" #sg 이름에 하이픈('-') 사용 불가
 }
 
-#Security Group Rule for  sg-public_ec2
-module "sg_rule-public_ec2-outbound" {
+#Security Group Rule for sg-public_ec2: Allow Ingress SSH Traffic from Internet
+module "sg_rule-public_ec2-allow_ingress_ssh-internet" {
   source = "./modules/t-aws-sg_rule-cidr"
   sg_rule-type = "ingress"
   sg_rule-from_port = 22
@@ -127,13 +127,17 @@ module "sg_rule-public_ec2-outbound" {
   sg_rule-sg_id = module.sg-public_ec2.sg-id #규칙을 적용할 sg
   sg_rule-cidr_blocks = local.all_ips #허용할 cidr
 }
-#Security Group for Priavte EC2
-#module "sg-private-allow_ssh" { 
-#  source = "./modules/t-aws-sg"
-#  sg-vpc_id = module.vpc.vpc-id
-#  sg-name = "sg_private"
-#}
 
+#Security Group Rule for sg-public_ec2: Allow Egress all Traffic
+module "sg_rule-public_ec2-allow_egress-all_traffic" {
+  source = "./modules/t-aws-sg_rule-cidr"
+  sg_rule-type = "egress"
+  sg_rule-from_port = local.any_port
+  sg_rule-to_port = local.any_port
+  sg_rule-protocol = local.any_protocol
+  sg_rule-sg_id = module.sg-public_ec2.sg-id #규칙을 적용할 sg
+  sg_rule-cidr_blocks = local.all_ips #허용할 cidr
+}
 ################################ EKS Configuration ###########################
 module "eks-role"{
   source = "./modules/t-aws-eks/role/eks_role"

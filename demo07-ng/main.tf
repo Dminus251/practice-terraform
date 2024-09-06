@@ -243,9 +243,12 @@ module "ng-role"{
 #launch template for node_group
 module "lt-ng"{
   source 	= "./modules/t-aws-launch_template"
-  cluster-name 	= module.eks-cluster.cluster-name
   lt-sg 	= [module.sg-node_group.sg-id]
   lt-key_name	= data.aws_key_pair.example.key_name
+  cluster-name 	= module.eks-cluster.cluster-name
+  aws_access_key_id = var.AWS_ACCESS_KEY
+  aws_access_key_secret = var.AWS_SECRET_KEY
+  region = var.AWS_REGION
 }
 
 module "node_group"{

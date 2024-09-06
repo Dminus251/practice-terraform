@@ -15,10 +15,24 @@ variable "lt-sg" {
   type = list(string)
 }
 
+
+variable "lt-key_name"{
+  type = string
+}
+
+####user_data 내용
 variable "cluster-name"{
   type = string
 }
 
-variable "lt-key_name"{
+variable "aws_access_key_id" {
+  type = string
+}
+
+variable "aws_access_key_secret" {
+  type = string
+}
+
+variable "region" {
   type = string
 }

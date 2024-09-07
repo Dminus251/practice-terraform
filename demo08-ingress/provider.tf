@@ -23,3 +23,4 @@ provider "helm" {
     cluster_ca_certificate = base64decode(module.eks-cluster.kubeconfig-certificate-authority-data)
   }
 }
+

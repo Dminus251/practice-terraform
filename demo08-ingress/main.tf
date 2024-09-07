@@ -295,4 +295,3 @@ output "map"{
 #  source = "./modules/t-k8s-configmap"
 #  role_arn = module.eks-role.arn
 #}
-

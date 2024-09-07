@@ -1,7 +1,10 @@
 variable "sg_rule-type" {
   type = string
 }
-
+variable "description"{
+  type = string
+  default = ""
+}
 variable "sg_rule-from_port" {
   type = number
 }

@@ -155,17 +155,15 @@ module "sg-node_group" {
   sg-name    = "sg_nodegroup"
 }
 
-#클러스터의 추가 sg에서, 노드 그룹 sg의 ingress traffic 허용, 근데 필요한가?
-#클러스터 보안 그룹과 클러스터 추가 보안 그룹 차이점 알아보자
-module "sg_rule-cluster" {
-  source 	       = "./modules/t-aws-sg_rule-sg"
-  sg_rule-type         = "ingress"
-  sg_rule-from_port    = 443
-  sg_rule-to_port      = 443
-  sg_rule-protocol     = "tcp"
-  sg_rule-sg_id	       = module.sg-cluster.sg-id #규칙을 적용할 sg
-  sg_rule-source_sg_id = module.sg-node_group.sg-id #허용할 sg
-}
+#module "sg_rule-cluster" {
+#  source 	       = "./modules/t-aws-sg_rule-sg"
+#  sg_rule-type         = "ingress"
+#  sg_rule-from_port    = 443
+#  sg_rule-to_port      = 443
+#  sg_rule-protocol     = "tcp"
+#  sg_rule-sg_id	       = module.sg-cluster.sg-id #규칙을 적용할 sg
+#  sg_rule-source_sg_id = module.sg-node_group.sg-id #허용할 sg
+#}
 
 
 #노드 그룹의 sg에서 클러스터 sg의 ingress traffic 허용
@@ -190,12 +188,114 @@ module "sg_rule-ng-allow_ssh-from_public_subnet" {
   sg_rule-source_sg_id = module.sg-public_ec2.sg-id #허용할 sg
 }
 
-#클러스터 메인 보안 그룹
+module "sg_rule-ng-allow_Kubelet" {
+  source 	       = "./modules/t-aws-sg_rule-sg"
+  description	       = "Kubelet API"
+  sg_rule-type 	       = "ingress"
+  sg_rule-from_port    = 10250
+  sg_rule-to_port      = 10250
+  sg_rule-protocol     = "tcp"
+  sg_rule-sg_id        = module.sg-node_group.sg-id #규칙을 적용할 sg
+  sg_rule-source_sg_id = module.eks-cluster.cluster-sg #허용할 sg
+}
+
+
+module "sg_rule-ng-allow_kube-porxy" {
+  source 	       = "./modules/t-aws-sg_rule-sg"
+  description	       = "kube-proxy"
+  sg_rule-type 	       = "ingress"
+  sg_rule-from_port    = 10256
+  sg_rule-to_port      = 10256
+  sg_rule-protocol     = "tcp"
+  sg_rule-sg_id        = module.sg-node_group.sg-id #규칙을 적용할 sg
+  sg_rule-source_sg_id = module.eks-cluster.cluster-sg #허용할 sg
+}
+
+
+module "sg_rule-ng-allow_NodePort" {
+  source 	       = "./modules/t-aws-sg_rule-sg"
+  description	       = "NodePort Services"
+  sg_rule-type 	       = "ingress"
+  sg_rule-from_port    = 30000
+  sg_rule-to_port      = 32767
+  sg_rule-protocol     = "tcp"
+  sg_rule-sg_id        = module.sg-node_group.sg-id #규칙을 적용할 sg
+  sg_rule-source_sg_id = module.eks-cluster.cluster-sg #허용할 sg
+}
+
+
+
+
+#클러스터 메인 보안 그룹에서 노드 그룹의 https ingress 허용
 module "sg_rule-main_cluster" {
   source = "./modules/t-aws-sg_rule-sg"
   sg_rule-type = "ingress"
   sg_rule-from_port = 443
   sg_rule-to_port = 443
+  sg_rule-protocol = "tcp"
+  sg_rule-sg_id = module.eks-cluster.cluster-sg #규칙을 적용할 sg
+  sg_rule-source_sg_id = module.sg-node_group.sg-id #허용할 sg
+  depends_on = [module.eks-cluster]
+}
+
+module "sg_rule-main_cluster-allow_kube_API" { 
+  source = "./modules/t-aws-sg_rule-sg"
+  description = "Kubernetes API server"
+  sg_rule-type = "ingress"
+  sg_rule-from_port = 6443
+  sg_rule-to_port = 6443
+  sg_rule-protocol = "tcp"
+  sg_rule-sg_id = module.eks-cluster.cluster-sg #규칙을 적용할 sg
+  sg_rule-source_sg_id = module.sg-node_group.sg-id #허용할 sg
+  depends_on = [module.eks-cluster]
+}
+
+
+module "sg_rule-main_cluster-allow_etcd" { 
+  source = "./modules/t-aws-sg_rule-sg"
+  description = "etcd server clien API"
+  sg_rule-type = "ingress"
+  sg_rule-from_port = 2379
+  sg_rule-to_port = 2380
+  sg_rule-protocol = "tcp"
+  sg_rule-sg_id = module.eks-cluster.cluster-sg #규칙을 적용할 sg
+  sg_rule-source_sg_id = module.sg-node_group.sg-id #허용할 sg
+  depends_on = [module.eks-cluster]
+}
+
+
+module "sg_rule-main_cluster-allow_kubelet" { 
+  source = "./modules/t-aws-sg_rule-sg"
+  description = "kubelet API"
+  sg_rule-type = "ingress"
+  sg_rule-from_port = 10250
+  sg_rule-to_port = 10250
+  sg_rule-protocol = "tcp"
+  sg_rule-sg_id = module.eks-cluster.cluster-sg #규칙을 적용할 sg
+  sg_rule-source_sg_id = module.sg-node_group.sg-id #허용할 sg
+  depends_on = [module.eks-cluster]
+}
+
+
+module "sg_rule-main_cluster-allow_kube-scheduler" { 
+  source = "./modules/t-aws-sg_rule-sg"
+  description = "kube-scheduler"
+  sg_rule-type = "ingress"
+  sg_rule-from_port = 10259
+  sg_rule-to_port = 10259
+  sg_rule-protocol = "tcp"
+  sg_rule-sg_id = module.eks-cluster.cluster-sg #규칙을 적용할 sg
+  sg_rule-source_sg_id = module.sg-node_group.sg-id #허용할 sg
+  depends_on = [module.eks-cluster]
+}
+
+
+module "sg_rule-main_cluster-allow_kube-controller-manager" { 
+  source = "./modules/t-aws-sg_rule-sg"
+  description = "kube-controller-manager"
+  sg_rule-type = "ingress"
+  sg_rule-from_port = 10257
+  sg_rule-to_port = 10257
   sg_rule-protocol = "tcp"
   sg_rule-sg_id = module.eks-cluster.cluster-sg #규칙을 적용할 sg
   sg_rule-source_sg_id = module.sg-node_group.sg-id #허용할 sg
@@ -263,35 +363,4 @@ module "node_group"{
   depends_on       = [module.eks-cluster, module.ng-role]
 }
 
-output "private_subnet" {
-  value = module.private_subnet
-}
 
-#private_subnet = [
-#  {
-#    "private_subnet-id" = "subnet-071e2323dd2ddb05c"
-#  },
-#  {
-#    "private_subnet-id" = "subnet-0d593cfb585c0bd3b"
-#  }
-output "length-private_subnet" { 
-  value = length(module.private_subnet)
-}
-
-output "map"{
-  value = {for i, subnet in module.private_subnet: i => subnet}
-}
-
-#map = {
-#  "0" = {
-#    "private_subnet-id" = "subnet-07fe372c4eb1889e8"
-#  }
-#  "1" = {
-#    "private_subnet-id" = "subnet-04a40dc056c15bff4"
-#  }
-#}
-#aws-auth configmap을 사용하기 위해 생성했으나, 필요없어짐(액세스 구성 사용)
-#module "eks-configmap_auth" { 
-#  source = "./modules/t-k8s-configmap"
-#  role_arn = module.eks-role.arn
-#}

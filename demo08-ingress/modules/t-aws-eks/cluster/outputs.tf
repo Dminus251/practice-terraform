@@ -16,3 +16,11 @@ output "cluster-name" {
 output "cluster-sg" {
   value = aws_eks_cluster.example.vpc_config[0].cluster_security_group_id
 }
+
+output "identity" {
+  value = aws_eks_cluster.example.identity
+}
+
+output "url" {
+  value = aws_eks_cluster.example.identity[0].oidc[0].issuer
+}

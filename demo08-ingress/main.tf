@@ -139,6 +139,14 @@ module "sg_rule-public_ec2-allow_egress-all_traffic" {
   sg_rule-cidr_blocks = local.all_ips #허용할 cidr
 }
 ################################ EKS Configuration ###########################
+module "eks-cluster"{ 
+  source 		= "./modules/t-aws-eks/cluster"
+  cluster-name 		= var.cluster-name
+  cluster-sg		= [module.sg-cluster.sg-id,]
+  cluster-role_arn 	= module.eks-role.arn
+  cluster-subnet_ids 	= [ for i in module.private_subnet: i["private_subnet-id"] ]
+}
+
 module "eks-role"{
   source = "./modules/t-aws-eks/role/eks_role"
 }
@@ -224,6 +232,19 @@ module "sg_rule-ng-allow_NodePort" {
 }
 
 
+module "sg_rule-ng-allow_webhook" {
+  source 	       = "./modules/t-aws-sg_rule-sg"
+  description	       = "allow webhook"
+  sg_rule-type 	       = "ingress"
+  sg_rule-from_port    = 9443
+  sg_rule-to_port      = 9443
+  sg_rule-protocol     = "tcp"
+  sg_rule-sg_id        = module.sg-node_group.sg-id #규칙을 적용할 sg
+  sg_rule-source_sg_id = module.eks-cluster.cluster-sg #허용할 sg
+}
+
+
+
 
 
 #클러스터 메인 보안 그룹에서 노드 그룹의 https ingress 허용
@@ -302,6 +323,17 @@ module "sg_rule-main_cluster-allow_kube-controller-manager" {
   depends_on = [module.eks-cluster]
 }
 
+module "sg_rule-main_cluster-allow_webhook" { 
+  source = "./modules/t-aws-sg_rule-sg"
+  description = "allow webhook"
+  sg_rule-type = "ingress"
+  sg_rule-from_port = 9443
+  sg_rule-to_port = 9443
+  sg_rule-protocol = "tcp"
+  sg_rule-sg_id = module.eks-cluster.cluster-sg #규칙을 적용할 sg
+  sg_rule-source_sg_id = module.sg-node_group.sg-id #허용할 sg
+  depends_on = [module.eks-cluster]
+}
 output "cluster-main-sg"{
   value = module.eks-cluster.cluster-sg
 }
@@ -327,13 +359,6 @@ module "sg_rule-ng-outbound" {
   sg_rule-cidr_blocks = local.all_ips #허용할 cidr
 }
 
-module "eks-cluster"{ 
-  source 		= "./modules/t-aws-eks/cluster"
-  cluster-name 		= var.cluster-name
-  cluster-sg		= [module.sg-cluster.sg-id,]
-  cluster-role_arn 	= module.eks-role.arn
-  cluster-subnet_ids 	= [ for i in module.private_subnet: i["private_subnet-id"] ]
-}
 
 #role of node_group
 module "ng-role"{

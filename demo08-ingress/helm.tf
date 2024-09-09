@@ -1,5 +1,5 @@
 resource "helm_release" "alb-ingress-controller"{
-  count = 0
+  count = 1
   depends_on = [module.eks-cluster.cluster-name]
   repository = "https://aws.github.io/eks-charts"
   name = "aws-load-balancer-controller"
@@ -115,7 +115,7 @@ resource "aws_iam_policy" "iam_policy-aws-loadbalancer-controller" {
 }
 
 resource "aws_iam_role_policy_attachment" "alb_ingress_policy_attach" {
-  policy_arn = "arn:aws:iam::aws:policy/ElasticLoadBalancingFullAccess"
+  policy_arn = aws_iam_policy.iam_policy-aws-loadbalancer-controller.arn
   role       = aws_iam_role.alb_ingress_sa_role.name
   depends_on = [aws_iam_policy.iam_policy-aws-loadbalancer-controller]
 }

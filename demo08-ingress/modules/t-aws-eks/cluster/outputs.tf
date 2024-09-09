@@ -21,6 +21,11 @@ output "identity" {
   value = aws_eks_cluster.example.identity
 }
 
-output "url" {
+output "oidc_url" {
   value = aws_eks_cluster.example.identity[0].oidc[0].issuer
 }
+
+output "oidc_url_without_https" {
+  value = replace(aws_eks_cluster.example.identity[0].oidc[0].issuer, "https://", "")
+}
+

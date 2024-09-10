@@ -89,8 +89,8 @@ resource "aws_iam_role" "alb_ingress_sa_role" {
             "Action": "sts:AssumeRoleWithWebIdentity",
             "Condition": {
                 "StringEquals": {
-                    "${module.eks-cluster.oidc_url_without_https}:aud": "sts.amazonaws.com",
-                    "${module.eks-cluster.oidc_url_without_https}:sub": "system:serviceaccount:kube-system:aws-load-balancer-controller"
+                    "${module.eks-cluster.oidc_url_without_https}:aud": "sts.amazonaws.com", #인증 요청 대상
+ 		    "${module.eks-cluster.oidc_url_without_https}:sub": "system:serviceaccount:kube-system:aws-load-balancer-controller"
                 }
             }
         }
@@ -119,8 +119,12 @@ resource "kubernetes_service_account" "example" {
     name = "aws-load-balancer-controller"
     namespace = "kube-system"
     annotations = {
-      "eks.amazonaws.com/role-arn" = "arn:aws:iam::992382518527:role/${aws_iam_role.alb_ingress_sa_role.name}"
+      #"eks.amazonaws.com/role-arn" = "arn:aws:iam::992382518527:role/${aws_iam_role.alb_ingress_sa_role.name}" #순환참조 문제 발생. 아래로 변경
+      "eks.amazonaws.com/role-arn" = "arn:aws:iam::992382518527:role/alb-ingress-sa-role"
     }
   }
 }
 
+output "sa-metadata"{
+  value = resource.kubernetes_service_account.example.metadata
+}

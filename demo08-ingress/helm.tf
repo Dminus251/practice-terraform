@@ -1,6 +1,6 @@
 resource "helm_release" "alb-ingress-controller"{
   count = 1
-  depends_on = [module.eks-cluster.cluster-name]
+  depends_on = [module.eks-cluster, module.public_subnet]
   repository = "https://aws.github.io/eks-charts"
   name = "aws-load-balancer-controller"
   chart = "aws-load-balancer-controller"

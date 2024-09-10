@@ -403,3 +403,11 @@ module "sa-alc"{
     "eks.amazonaws.com/role-arn" = "arn:aws:iam::992382518527:role/alb-ingress-sa-role"
   }
 }
+
+module "role-acl-sa"{
+  source = "./modules/t-aws-eks/role/alc"
+  role-alc_role_name = "alb-ingress-sa-role"
+  role-alc-oidc_without_https = module.eks-cluster.oidc_url_without_https
+  role-alc-namespace = module.sa-alc.sa-namespace
+  role-alc-sa_name = module.sa-alc.sa-name
+}

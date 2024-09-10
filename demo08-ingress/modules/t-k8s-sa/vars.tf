@@ -6,7 +6,7 @@ variable "sa-name"{
   type = string
 }
 
-variable "sa-nanmepsace"{
+variable "sa-namespace"{
   type = string
 }
 

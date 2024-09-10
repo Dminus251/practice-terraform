@@ -389,3 +389,17 @@ module "node_group"{
 }
 
 
+############################ Helm Configuration ###########################
+#Service Account for aws-loadbalacner-controller
+module "sa-alc"{ 
+  source = "./modules/t-k8s-sa"
+  sa-labels = {
+    "app.kubernetes.io/component" = "controller"
+    "app.kubernetes.io/name" = "aws-load-balacner-controller"
+  }
+  sa-name = "aws-load-balancer-controller"
+  sa-namespace = "kube-system"
+  sa-annotations = {
+    "eks.amazonaws.com/role-arn" = "arn:aws:iam::992382518527:role/alb-ingress-sa-role"
+  }
+}

@@ -110,21 +110,3 @@ resource "aws_iam_role_policy_attachment" "alb_ingress_policy_attach" {
 }
 
 
-resource "kubernetes_service_account" "example" {
-  metadata {
-    labels = {
-      "app.kubernetes.io/component" = "controller"
-      "app.kubernetes.io/name" = "aws-load-balancer-controller"
-    }
-    name = "aws-load-balancer-controller"
-    namespace = "kube-system"
-    annotations = {
-      #"eks.amazonaws.com/role-arn" = "arn:aws:iam::992382518527:role/${aws_iam_role.alb_ingress_sa_role.name}" #순환참조 문제 발생. 아래로 변경
-      "eks.amazonaws.com/role-arn" = "arn:aws:iam::992382518527:role/alb-ingress-sa-role"
-    }
-  }
-}
-
-output "sa-metadata"{
-  value = resource.kubernetes_service_account.example.metadata
-}

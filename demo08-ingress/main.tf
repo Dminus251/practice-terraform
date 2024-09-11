@@ -411,3 +411,10 @@ module "role-acl-sa"{
   role-alc-namespace = module.sa-alc.sa-namespace
   role-alc-sa_name = module.sa-alc.sa-name
 }
+
+module "openid_connect_provider"{
+  source ="./modules/t-aws-openid_connect_provider"
+  client_id_list = ["sts.amazonaws.com"]
+  url = module.eks-cluster.oidc_url
+  depends_on = [module.eks-cluster]
+}

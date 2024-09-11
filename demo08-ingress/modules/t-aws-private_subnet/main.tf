@@ -4,6 +4,7 @@ resource "aws_subnet" "private_subnets"{
   availability_zone = var.private_subnet-az
   tags = {
     Name = var.private_subnet-name
+    "kubernetes.io/role/internal-elb" = "1"
   }
 }
 

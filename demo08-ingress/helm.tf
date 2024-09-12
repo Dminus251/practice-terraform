@@ -1,6 +1,6 @@
 resource "helm_release" "alb-ingress-controller"{
   count = 1
-  depends_on = [module.eks-cluster, module.public_subnet]
+  depends_on = [module.eks-cluster, module.public_subnet, helm_release.cert-manager]
   repository = "https://aws.github.io/eks-charts"
   name = "aws-load-balancer-controller"
   chart = "aws-load-balancer-controller"
@@ -52,6 +52,25 @@ resource "helm_release" "alb-ingress-controller"{
     name  = "webhook.service.targetPort"
     value = "9443"
   }
+  set {
+    name = "enableCertManager"
+    value = "true"
+  }
+}
+
+resource "helm_release" "cert-manager"{
+  repository = "https://charts.jetstack.io"
+  name = "jetpack"
+  chart = "cert-manager"
+
+  namespace  = "cert-manager" 
+  create_namespace = true      # 네임스페이스가 없는 경우 생성
+
+  set {
+    name  = "installCRDs"
+    value = "true"  # Cert Manager 설치 시 CRDs도 함께 설치
+  }
+  
 }
 
 output "oidc_url" {

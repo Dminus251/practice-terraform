@@ -404,7 +404,7 @@ module "sa-alc"{
   }
 }
 
-module "role-acl-sa"{
+module "role-alc-sa"{
   source = "./modules/t-aws-eks/role/alc"
   role-alc_role_name = "alb-ingress-sa-role"
   role-alc-oidc_without_https = module.eks-cluster.oidc_url_without_https

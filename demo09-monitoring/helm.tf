@@ -77,15 +77,23 @@ resource "helm_release" "cert-manager"{
 }
 
 ################################# PROMETHEUS ################################# 
-#resource "helm_release" "prometheus"{
-#  depends_on = [module.eks-cluster]
-#  repository = "https://prometheus-community.github.io/helm-charts"
-#  name = "practice" #release name
-#  chart = "prometheus" # chart name
-#  namespace = "monitoring"
-#  create_namespace = true
-#  set {
-#    name = "persistentVolume.storageClass"
-#    value = "gp2"
-#  }
-#}
+resource "helm_release" "prometheus"{
+  depends_on = [module.eks-cluster]
+  repository = "https://prometheus-community.github.io/helm-charts"
+  name = "practice" #release name
+  chart = "prometheus" # chart name
+  namespace = "monitoring"
+  create_namespace = true
+  set {
+    name = "persistentVolume.storageClass"
+    value = "gp2-csi"
+  }
+  set {
+    name = "alertmanager.persistentVolume.storageClass"
+    value = "gp2-csi"
+  }
+  set {
+    name = "server.persistentVolume.storageClass"
+    value = "gp2-csi"
+  }
+}

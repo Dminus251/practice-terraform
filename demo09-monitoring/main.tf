@@ -389,7 +389,24 @@ module "node_group"{
 }
 
 
+module "openid_connect_provider"{
+  source ="./modules/t-aws-openid_connect_provider"
+  client_id_list = ["sts.amazonaws.com"]
+  url = module.eks-cluster.oidc_url
+  depends_on = [module.eks-cluster]
+}
 ############################ Helm Configuration ###########################
+
+#Role for aws-loadbalacner-controller sa
+module "role-alc-sa"{
+  source = "./modules/t-aws-eks/role/alc"
+  role-alc_role_name = "alb-ingress-sa-role"
+  role-alc-oidc_without_https = module.eks-cluster.oidc_url_without_https
+  role-alc-namespace = module.sa-alc.sa-namespace
+  role-alc-sa_name = module.sa-alc.sa-name
+  depends_on = [module.eks-cluster]
+}
+
 #Service Account for aws-loadbalacner-controller
 module "sa-alc"{ 
   source = "./modules/t-k8s-sa"
@@ -402,19 +419,30 @@ module "sa-alc"{
   sa-annotations = {
     "eks.amazonaws.com/role-arn" = "arn:aws:iam::992382518527:role/alb-ingress-sa-role"
   }
+  depends_on = [module.eks-cluster]
 }
 
-module "role-alc-sa"{
-  source = "./modules/t-aws-eks/role/alc"
-  role-alc_role_name = "alb-ingress-sa-role"
-  role-alc-oidc_without_https = module.eks-cluster.oidc_url_without_https
-  role-alc-namespace = module.sa-alc.sa-namespace
-  role-alc-sa_name = module.sa-alc.sa-name
+
+#Role of EBS-CSI-DRIVER sa
+module "role-ecd-sa"{
+  source = "./modules/t-aws-eks/role/ebs-csi-driver"
+  role-ecd_role_name = "AmazonEKS_EBS_CSI_DriverRole"
+  role-ecd-oidc_without_https = module.eks-cluster.oidc_url_without_https
+  role-ecd-namespace = module.sa-ecd.sa-namespace
+  role-ecd-sa_name = module.sa-ecd.sa-name
+  depends_on = [module.eks-cluster]
 }
 
-module "openid_connect_provider"{
-  source ="./modules/t-aws-openid_connect_provider"
-  client_id_list = ["sts.amazonaws.com"]
-  url = module.eks-cluster.oidc_url
+#Service Account for EBS-CSI-Driver
+module "sa-ecd"{
+  source = "./modules/t-k8s-sa"
+  sa-labels = {
+    
+  }
+  sa-name = "ebs-csi-controller-sa"
+  sa-namespace = "kube-system"
+  sa-annotations = {
+    "eks.amazonaws.com/role-arn" = "arn:aws:iam::992382518527:role/AmazonEKS_EBS_CSI_DriverRole"
+  }
   depends_on = [module.eks-cluster]
 }

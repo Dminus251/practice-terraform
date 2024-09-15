@@ -1,5 +1,5 @@
 #Role for Ebs-Csi-Driver
-resource "aws_iam_role" "ecd_ingress_sa_role" {
+resource "aws_iam_role" "ecd-role" {
   name = var.role-ecd_role_name
 
   assume_role_policy = jsonencode({
@@ -21,13 +21,8 @@ resource "aws_iam_role" "ecd_ingress_sa_role" {
     ] 
   })
 }
-
-resource "aws_iam_policy" "iam_policy-AmazonEBSCSIDriverPolicy" {
-  name        = "AmazonEBSCSIDriverPolicy"
-  policy      = file("kms-key-for-encryption-on-ebs.json")
-}
-
 resource "aws_iam_role_policy_attachment" "alb_ingress_policy_attach" {
-  policy_arn = aws_iam_policy.iam_policy-AmazonEBSCSIDriverPolicy.arn
-  role       = aws_iam_role.ecd_ingress_sa_role.name
+  role = aws_iam_role.ecd-role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+  depends_on = [aws_iam_role.ecd-role]
 }

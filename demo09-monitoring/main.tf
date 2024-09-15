@@ -388,12 +388,20 @@ module "node_group"{
   depends_on       = [module.eks-cluster, module.ng-role]
 }
 
-
+#OCID 공급자 연결
 module "openid_connect_provider"{
   source ="./modules/t-aws-openid_connect_provider"
   client_id_list = ["sts.amazonaws.com"]
   url = module.eks-cluster.oidc_url
   depends_on = [module.eks-cluster]
+}
+
+#add on 
+module "addon-aws-ebs-csi-driver"{
+  source = "./modules/t-aws-eks/addon/"
+  addon-cluster_name = module.eks-cluster.cluster-name
+  addon-name = "aws-ebs-csi-driver"
+  addon-role = module.role-ecd-sa.arn
 }
 ############################ Helm Configuration ###########################
 
@@ -411,8 +419,8 @@ module "role-alc-sa"{
 module "sa-alc"{ 
   source = "./modules/t-k8s-sa"
   sa-labels = {
-    "app.kubernetes.io/component" = "controller"
-    "app.kubernetes.io/name" = "aws-load-balacner-controller"
+    "app.kubernetes.io/component" = "controller" #구성 요소
+    "app.kubernetes.io/name" = "aws-load-balacner-controller" #애플리케이션 이름
   }
   sa-name = "aws-load-balancer-controller"
   sa-namespace = "kube-system"
@@ -426,23 +434,26 @@ module "sa-alc"{
 #Role of EBS-CSI-DRIVER sa
 module "role-ecd-sa"{
   source = "./modules/t-aws-eks/role/ebs-csi-driver"
-  role-ecd_role_name = "AmazonEKS_EBS_CSI_DriverRole"
+  role-ecd_role_name = "ebs-csi-controller-sa"
   role-ecd-oidc_without_https = module.eks-cluster.oidc_url_without_https
-  role-ecd-namespace = module.sa-ecd.sa-namespace
-  role-ecd-sa_name = module.sa-ecd.sa-name
+  role-ecd-namespace = "kube-system"
+  role-ecd-sa_name = "ebs-csi-controller-sa"
   depends_on = [module.eks-cluster]
 }
 
 #Service Account for EBS-CSI-Driver
-module "sa-ecd"{
-  source = "./modules/t-k8s-sa"
-  sa-labels = {
-    
-  }
-  sa-name = "ebs-csi-controller-sa"
-  sa-namespace = "kube-system"
-  sa-annotations = {
-    "eks.amazonaws.com/role-arn" = "arn:aws:iam::992382518527:role/AmazonEKS_EBS_CSI_DriverRole"
-  }
-  depends_on = [module.eks-cluster]
-}
+#module "sa-ecd"{
+#  source = "./modules/t-k8s-sa"
+#  sa-labels = {
+#    "app.kubernetes.io/component" = "controller" #구성 요소
+#    "app.kubernetes.io/name" = "ebs-csi-controller" #애플리케이션 이름
+#    
+#  }
+#  sa-name = "ebs-csi-controller-sa"
+#  sa-namespace = "kube-system"
+#  sa-annotations = {
+#    "eks.amazonaws.com/role-arn" = "arn:aws:iam::992382518527:role/ebs-csi-controller-sa"
+#  }
+#  depends_on = [module.eks-cluster]
+#}
+

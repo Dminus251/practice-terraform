@@ -13,9 +13,17 @@ spec:
     - http:
         paths:
           - pathType: Prefix
-            path: /
+            path: /prometheus
             backend:
               service:
                 name: service-prometheus
                 port:
                   number: 80
+
+          - pathType: Prefix
+            path: /grafana
+            backend:
+              service:
+                name: service-grafana
+                port:
+                  number: 90

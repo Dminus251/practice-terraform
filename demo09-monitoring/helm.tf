@@ -1,6 +1,6 @@
 ################################# AWS-LOADBALANCER-CONTROLLER ################################# 
 resource "helm_release" "alb-ingress-controller"{
-  count = 1
+  #count = 0
   depends_on = [module.eks-cluster, module.public_subnet, helm_release.cert-manager]
   repository = "https://aws.github.io/eks-charts"
   name = "aws-load-balancer-controller" #release name
@@ -61,6 +61,7 @@ resource "helm_release" "alb-ingress-controller"{
 
 ################################# CERT-MANAGER ################################# 
 resource "helm_release" "cert-manager"{
+  #count = 0 주석 해제할 경우 alc에서 depends_on 변경, enableCertManager 주석처리
   depends_on = [module.eks-cluster] 
   repository = "https://charts.jetstack.io"
   name = "jetpack" #release name
@@ -78,10 +79,10 @@ resource "helm_release" "cert-manager"{
 
 ################################# PROMETHEUS ################################# 
 resource "helm_release" "prometheus"{
-  count = 1
-  depends_on = [module.eks-cluster]
+  #count = 0
+  depends_on = [module.eks-cluster, module.addon-aws-ebs-csi-driver]
   repository = "https://prometheus-community.github.io/helm-charts"
-  name = "practice" #release name
+  name = "practice-prometheus" #release name
   chart = "prometheus" # chart name
   namespace = "monitoring"
   create_namespace = true
@@ -93,4 +94,73 @@ resource "helm_release" "prometheus"{
     name  = "alertmanager.persistence.storageClass"
     value = "gp2"
   }
+  set {
+    name  = "ingress.enabled"
+    value = "true"
+  }
+  set {
+    name  = "ingress.annotations"
+    value = "{\"alb.ingress.kubernetes.io/scheme\":\"internet-facing\",\"alb.ingress.kubernetes.io/target-type\":\"ip\",\"alb.ingress.kubernetes.io/healthcheck-path\":\"/graph\"}"
+  }
+  set {
+    name  = "ingress.servicePort"
+    value = "80"
+  }
+  set {
+    name  = "ingress.path"
+    value = "/prometheus"
+  }
+  set {
+    name  = "ingress.ingressClassName"
+    value = "alb"
+  }
+
 }
+################################# GRAFANA ################################# 
+resource "helm_release" "grafana"{
+  #count = 0
+  depends_on = [module.eks-cluster, module.addon-aws-ebs-csi-driver]
+  repository = "https://grafana.github.io/helm-charts"
+  name = "practice-grafana"
+  chart = "grafana"
+  namespace = "monitoring"
+  create_namespace = true
+   set {
+    name  = "adminPassword"
+    value = "admin"  
+  }
+
+  set {
+    name  = "service.type"
+    value = "LoadBalancer"
+  }
+
+  set {
+    name  = "persistence.enabled"
+    value = "true"
+  }
+
+  set {
+    name  = "persistence.storageClassName"
+    value = "gp2"
+  }
+  set {
+    name  = "ingress.enabled"
+    value = "true"
+  }
+
+  set {
+    name  = "ingress.path"
+    value = "/grafana"
+  }
+
+  set {
+    name  = "ingress.annotations"
+    value = "{\"alb.ingress.kubernetes.io/scheme\":\"internet-facing\",\"alb.ingress.kubernetes.io/target-type\":\"ip\",\"alb.ingress.kubernetes.io/healthcheck-path\":\"/graph\"}"
+  }
+  set {
+    name  = "ingress.ingressClassName"
+    value = "alb"
+  }
+}
+

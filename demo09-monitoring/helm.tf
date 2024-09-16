@@ -1,7 +1,8 @@
 ################################# AWS-LOADBALANCER-CONTROLLER ################################# 
 resource "helm_release" "alb-ingress-controller"{
   #count = 0
-  depends_on = [module.eks-cluster, module.public_subnet, helm_release.cert-manager]
+  #depends_on = [module.eks-cluster, module.public_subnet, helm_release.cert-manager]
+  depends_on = [module.eks-cluster, module.public_subnet]
   repository = "https://aws.github.io/eks-charts"
   name = "aws-load-balancer-controller" #release name
   chart = "aws-load-balancer-controller" #chart name
@@ -53,29 +54,30 @@ resource "helm_release" "alb-ingress-controller"{
     name  = "webhook.service.targetPort"
     value = "9443"
   }
-  set {
-    name = "enableCertManager"
-    value = "true"
-  }
+#  set {
+#    name = "enableCertManager"
+#   value = "true"
+#  }
 }
 
 ################################# CERT-MANAGER ################################# 
-resource "helm_release" "cert-manager"{
-  #count = 0 주석 해제할 경우 alc에서 depends_on 변경, enableCertManager 주석처리
-  depends_on = [module.eks-cluster] 
-  repository = "https://charts.jetstack.io"
-  name = "jetpack" #release name
-  chart = "cert-manager" #chart name
-
-  namespace  = "cert-manager" 
-  create_namespace = true      # 네임스페이스가 없는 경우 생성
-
-  set {
-    name  = "installCRDs"
-    value = "true"  # Cert Manager 설치 시 CRDs도 함께 설치
-  }
-  
-}
+#resource "helm_release" "cert-manager"{
+#  #count = 0 #주석 해제할 경우 alc에서 depends_on 변경, enableCertManager 주석처리
+#  depends_on = [module.eks-cluster] 
+#  repository = "https://charts.jetstack.io"
+#  name = "jetpack" #release name
+#  chart = "cert-manager" #chart name
+#  namespace  = "cert-manager" 
+#  create_namespace = true      # 네임스페이스가 없는 경우 생성
+#  set {
+#    name  = "installCRDs"
+#    value = "true"  # Cert Manager 설치 시 CRDs도 함께 설치
+#  }
+#  set {
+#    name = "crds.keep"
+#    value = "false" #true면 helm이나 terraform으로 삭제 시 crd 삭제되지 않음
+#  }
+#}
 
 ################################# PROMETHEUS ################################# 
 resource "helm_release" "prometheus"{
@@ -94,26 +96,26 @@ resource "helm_release" "prometheus"{
     name  = "alertmanager.persistence.storageClass"
     value = "gp2"
   }
-  set {
-    name  = "ingress.enabled"
-    value = "true"
-  }
-  set {
-    name  = "ingress.annotations"
-    value = "{\"alb.ingress.kubernetes.io/scheme\":\"internet-facing\",\"alb.ingress.kubernetes.io/target-type\":\"ip\",\"alb.ingress.kubernetes.io/healthcheck-path\":\"/graph\"}"
-  }
-  set {
-    name  = "ingress.servicePort"
-    value = "80"
-  }
-  set {
-    name  = "ingress.path"
-    value = "/prometheus"
-  }
-  set {
-    name  = "ingress.ingressClassName"
-    value = "alb"
-  }
+#  set {
+#    name  = "ingress.enabled"
+#    value = "true"
+#  }
+#  set {
+#    name  = "ingress.annotations"
+#    value = "{\"alb.ingress.kubernetes.io/scheme\":\"internet-facing\",\"alb.ingress.kubernetes.io/target-type\":\"ip\",\"alb.ingress.kubernetes.io/healthcheck-path\":\"/graph\"}"
+#  }
+#  set {
+#    name  = "ingress.servicePort"
+#    value = "80"
+#  }
+#  set {
+#    name  = "ingress.path"
+#    value = "/prometheus"
+#  }
+#  set {
+#    name  = "ingress.ingressClassName"
+#    value = "alb"
+#  }
 
 }
 ################################# GRAFANA ################################# 
@@ -129,12 +131,12 @@ resource "helm_release" "grafana"{
     name  = "adminPassword"
     value = "admin"  
   }
-
-  set {
-    name  = "service.type"
-    value = "LoadBalancer"
-  }
-
+#
+#  set {
+#    name  = "service.type"
+#    value = "LoadBalancer"
+#  }
+#
   set {
     name  = "persistence.enabled"
     value = "true"
@@ -144,23 +146,23 @@ resource "helm_release" "grafana"{
     name  = "persistence.storageClassName"
     value = "gp2"
   }
-  set {
-    name  = "ingress.enabled"
-    value = "true"
-  }
-
-  set {
-    name  = "ingress.path"
-    value = "/grafana"
-  }
-
-  set {
-    name  = "ingress.annotations"
-    value = "{\"alb.ingress.kubernetes.io/scheme\":\"internet-facing\",\"alb.ingress.kubernetes.io/target-type\":\"ip\",\"alb.ingress.kubernetes.io/healthcheck-path\":\"/graph\"}"
-  }
-  set {
-    name  = "ingress.ingressClassName"
-    value = "alb"
-  }
+#  set {
+#    name  = "ingress.enabled"
+#    value = "true"
+#  }
+#
+#  set {
+#    name  = "ingress.path"
+#    value = "/grafana"
+#  }
+#
+#  set {
+#    name  = "ingress.annotations"
+#    value = "{\"alb.ingress.kubernetes.io/scheme\":\"internet-facing\",\"alb.ingress.kubernetes.io/target-type\":\"ip\",\"alb.ingress.kubernetes.io/healthcheck-path\":\"/graph\"}"
+#  }
+#  set {
+#    name  = "ingress.ingressClassName"
+#    value = "alb"
+#  }
 }
 

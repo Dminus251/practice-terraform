@@ -7,24 +7,15 @@ metadata:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/healthcheck-path: /graph
-    alb.ingress.kubernetes.io/rewrite-target: /
 spec:
   ingressClassName: alb
   rules:
     - http:
         paths:
           - pathType: Prefix
-            path: /prometheus
+            path: /
             backend:
               service:
                 name: service-prometheus
-                port:
-                  number: 80
-
-          - pathType: Prefix
-            path: /grafana
-            backend:
-              service:
-                name: service-grafana
                 port:
                   number: 80

@@ -81,7 +81,6 @@ resource "helm_release" "alb-ingress-controller"{
 
 ################################# PROMETHEUS ################################# 
 resource "helm_release" "prometheus"{
-  #count = 0
   depends_on = [module.eks-cluster, module.addon-aws-ebs-csi-driver]
   repository = "https://prometheus-community.github.io/helm-charts"
   name = "practice-prometheus" #release name
@@ -96,73 +95,27 @@ resource "helm_release" "prometheus"{
     name  = "alertmanager.persistence.storageClass"
     value = "gp2"
   }
-#  set {
-#    name  = "ingress.enabled"
-#    value = "true"
-#  }
-#  set {
-#    name  = "ingress.annotations"
-#    value = "{\"alb.ingress.kubernetes.io/scheme\":\"internet-facing\",\"alb.ingress.kubernetes.io/target-type\":\"ip\",\"alb.ingress.kubernetes.io/healthcheck-path\":\"/graph\"}"
-#  }
-#  set {
-#    name  = "ingress.servicePort"
-#    value = "80"
-#  }
-#  set {
-#    name  = "ingress.path"
-#    value = "/prometheus"
-#  }
-#  set {
-#    name  = "ingress.ingressClassName"
-#    value = "alb"
-#  }
-
 }
 ################################# GRAFANA ################################# 
-resource "helm_release" "grafana"{
-  #count = 0
-  depends_on = [module.eks-cluster, module.addon-aws-ebs-csi-driver]
-  repository = "https://grafana.github.io/helm-charts"
-  name = "practice-grafana"
-  chart = "grafana"
-  namespace = "monitoring"
-  create_namespace = true
-   set {
-    name  = "adminPassword"
-    value = "admin"  
-  }
-#
-#  set {
-#    name  = "service.type"
-#    value = "LoadBalancer"
+#resource "helm_release" "grafana"{
+#  #count = 0
+#  depends_on = [module.eks-cluster, module.addon-aws-ebs-csi-driver]
+#  repository = "https://grafana.github.io/helm-charts"
+#  name = "practice-grafana"
+#  chart = "grafana"
+#  namespace = "monitoring"
+#  create_namespace = true
+#   set {
+#    name  = "adminPassword"
+#    value = "admin"  
 #  }
-#
-  set {
-    name  = "persistence.enabled"
-    value = "true"
-  }
-
-  set {
-    name  = "persistence.storageClassName"
-    value = "gp2"
-  }
 #  set {
-#    name  = "ingress.enabled"
+#    name  = "persistence.enabled"
 #    value = "true"
 #  }
-#
 #  set {
-#    name  = "ingress.path"
-#    value = "/grafana"
+#    name  = "persistence.storageClassName"
+#    value = "gp2"
 #  }
-#
-#  set {
-#    name  = "ingress.annotations"
-#    value = "{\"alb.ingress.kubernetes.io/scheme\":\"internet-facing\",\"alb.ingress.kubernetes.io/target-type\":\"ip\",\"alb.ingress.kubernetes.io/healthcheck-path\":\"/graph\"}"
-#  }
-#  set {
-#    name  = "ingress.ingressClassName"
-#    value = "alb"
-#  }
-}
+#}
 

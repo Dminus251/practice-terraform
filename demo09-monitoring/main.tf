@@ -402,6 +402,7 @@ module "addon-aws-ebs-csi-driver"{
   addon-cluster_name = module.eks-cluster.cluster-name
   addon-name = "aws-ebs-csi-driver"
   addon-role = module.role-ecd-sa.arn
+  depends_on = [module.node_group]
 }
 ############################ Helm Configuration ###########################
 

@@ -95,6 +95,10 @@ resource "helm_release" "prometheus"{
     name  = "alertmanager.persistence.storageClass"
     value = "gp2"
   }
+  set {
+    name = "server.prefixURL"
+    value = "prometheus"
+  }
 }
 ################################# GRAFANA ################################# 
 #resource "helm_release" "grafana"{

@@ -81,7 +81,7 @@ resource "helm_release" "alb-ingress-controller"{
 
 ################################# PROMETHEUS ################################# 
 resource "helm_release" "prometheus"{
-  depends_on = [module.eks-cluster, module.addon-aws-ebs-csi-driver]
+  depends_on = [module.eks-cluster, module.addon-aws-ebs-csi-driver, module.node_group]
   repository = "https://prometheus-community.github.io/helm-charts"
   name = "practice-prometheus" #release name
   chart = "prometheus" # chart name
@@ -97,7 +97,7 @@ resource "helm_release" "prometheus"{
   }
   set {
     name = "server.prefixURL"
-    value = "prometheus"
+    value = "/prometheus"
   }
 }
 ################################# GRAFANA ################################# 

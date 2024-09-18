@@ -10,10 +10,11 @@ metadata:
 spec:
   ingressClassName: alb
   rules:
-    - http:
+    - host: prometheus.youngkyu.me
+      http:
         paths:
           - pathType: Prefix
-            path: /prometheus
+            path: /
             backend:
               service:
                 name: service-prometheus

@@ -3,8 +3,6 @@ kind: Service
 metadata:
   name: service-prometheus
   namespace: monitoring
-  annotations:
-    service.beta.kubernetes.io/aws-load-balancer-type: nlb
 spec:
   selector:
     app.kubernetes.io/name: prometheus

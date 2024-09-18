@@ -45,10 +45,10 @@ resource "helm_release" "alb-ingress-controller"{
     name  = "webhook.service.targetPort"
     value = "9443"
   }
-  set {
-    name = "enableCertManager"
-   value = "true"
-  }
+#  set {
+#    name = "enableCertManager"
+#   value = "true"
+#  }
 }
 
 ################################# CERT-MANAGER ################################# 

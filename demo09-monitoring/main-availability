@@ -69,6 +69,7 @@ module "nat" { #NAT Gateway
   subnet-id = module.public_subnet[count.index].public_subnet-id  #nat는 public subnet에 위치해야 함
 }
 
+
 #Route Table: 0.0.0.0/0 to NAT
 module "route_table-internet_to_nat" { 
   source     = "./modules/t-aws-rt"
@@ -96,8 +97,6 @@ data "aws_key_pair" "example" {
 
 
 ################################ EC2 Configuration ###########################
-#pirvate ec2는 eks가 관리하니까 private sg 지워도 될 것 같고 public ec2 sg에 rule 추가해야될 것 같은데
-#모듈 바꾸면서 지워졌나??
 
 #Public EC2
 module "ec2_public" {

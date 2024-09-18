@@ -6,11 +6,21 @@ metadata:
   annotations:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/healthcheck-path: /prometheus/graph
+    alb.ingress.kubernetes.io/healthcheck-path: /graph
 spec:
   ingressClassName: alb
   rules:
     - host: prometheus.youngkyu.me
+      http:
+        paths:
+          - pathType: Prefix
+            path: /
+            backend:
+              service:
+                name: service-prometheus
+                port:
+                  number: 80
+
       http:
         paths:
           - pathType: Prefix

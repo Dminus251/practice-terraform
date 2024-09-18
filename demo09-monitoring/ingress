@@ -1,0 +1,32 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    alb.ingress.kubernetes.io/healthcheck-path: /prometheus/graph
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"networking.k8s.io/v1","kind":"Ingress","metadata":{"annotations":{"alb.ingress.kubernetes.io/healthcheck-path":"/prometheus/graph","alb.ingress.kubernetes.io/scheme":"internet-facing","alb.ingress.kubernetes.io/target-type":"ip"},"name":"ingress","namespace":"monitoring"},"spec":{"ingressClassName":"alb","rules":[{"host":"prometheus.youngkyu.me","http":{"paths":[{"backend":{"service":{"name":"service-prometheus","port":{"number":80}}},"path":"/","pathType":"Prefix"}]}}]}}
+  creationTimestamp: "2024-09-18T08:10:19Z"
+  deletionGracePeriodSeconds: 0
+  deletionTimestamp: "2024-09-18T08:12:21Z"
+  generation: 2
+  name: ingress
+  namespace: monitoring
+  resourceVersion: "3049"
+  uid: 9eeac529-4228-4fbd-997c-ca7d4d3c04cd
+spec:
+  ingressClassName: alb
+  rules:
+  - host: prometheus.youngkyu.me
+    http:
+      paths:
+      - backend:
+          service:
+            name: service-prometheus
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
+status:
+  loadBalancer: {}

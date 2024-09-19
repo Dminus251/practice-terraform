@@ -455,3 +455,10 @@ module "role-ecd-sa"{
 #  depends_on = [module.eks-cluster]
 #}
 
+data "aws_route53_zone" "route53" {
+  name = "youngkyu.me"
+}
+
+output "route53" {
+  value = data.aws_route53_zone.route53
+}

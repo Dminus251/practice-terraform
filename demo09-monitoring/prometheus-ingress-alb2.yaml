@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: ingress
+  name: ingress2
   namespace: monitoring
   annotations:
     alb.ingress.kubernetes.io/scheme: internet-facing
@@ -10,8 +10,7 @@ metadata:
 spec:
   ingressClassName: alb
   rules:
-    - host: prometheus.youngkyu.me
-      http:
+    - http:
         paths:
           - pathType: Prefix
             path: /
@@ -20,5 +19,3 @@ spec:
                 name: service-prometheus
                 port:
                   number: 80
-
-    

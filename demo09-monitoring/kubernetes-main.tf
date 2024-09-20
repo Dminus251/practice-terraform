@@ -1,5 +1,6 @@
+#Ingress for Prometheus
 resource "kubernetes_ingress_v1" "ingress-prometheus" { 
-  depends_on = [module.eks-cluster, module.node_group, helm_release.prometheus]
+  depends_on = [module.eks-cluster, module.node_group, helm_release.prometheus, kubernetes_service_v1.service-prometheus]
   metadata {
     name = "ingress-prometheus"
     namespace = "monitoring"
@@ -21,7 +22,7 @@ resource "kubernetes_ingress_v1" "ingress-prometheus" {
             service{
   	      name = "service-prometheus"
               port {
-                number = 80
+                number = 9090
               }
             }
           }
@@ -33,8 +34,8 @@ resource "kubernetes_ingress_v1" "ingress-prometheus" {
   }
 }
 
-
-resource "kubernetes_service_v1" "example" {
+#Service for Prometheus
+resource "kubernetes_service_v1" "service-prometheus" {
   depends_on = [module.eks-cluster, module.node_group, helm_release.prometheus]
   metadata {
     name = "service-prometheus"
@@ -46,7 +47,7 @@ resource "kubernetes_service_v1" "example" {
       "app.kubernetes.io/name" =  "prometheus"
     }
     port {
-      port        = 80
+      port        = 9090
       target_port = 9090
       protocol = "TCP"
     }
@@ -54,3 +55,58 @@ resource "kubernetes_service_v1" "example" {
 }
 
 
+#Ingress for Grafana
+resource "kubernetes_ingress_v1" "ingress-grafana" { 
+  depends_on = [module.eks-cluster, module.node_group, helm_release.grafana, kubernees_service_v1.service-grafana]
+  metadata {
+    name = "ingress-grafana"
+    namespace = "monitoring"
+    annotations = {
+      "alb.ingress.kubernetes.io/scheme" =  "internet-facing"
+      "alb.ingress.kubernetes.io/target-type" =  "ip"
+      "alb.ingress.kubernetes.io/healthcheck-path" = "/"
+    }
+  }
+  spec {
+    ingress_class_name = "alb"
+    rule {
+      host = "grafana.youngkyu.me"
+      http {
+        path {
+          path_type = "Prefix"
+          path = "/"
+          backend {
+            service{
+  	      name = "service-grafana"
+              port {
+                number = 3000
+              }
+            }
+          }
+
+        }
+
+      }
+    }
+  }
+}
+
+#Service for Grafana
+resource "kubernetes_service_v1" "service-grafana" {
+  depends_on = [module.eks-cluster, module.node_group, helm_release.grafana]
+  metadata {
+    name = "service-grafana"
+    namespace = "monitoring"
+  }
+  spec {
+    type = "NodePort"
+    selector = {
+      "app.kubernetes.io/name" =  "grafana"
+    }
+    port {
+      port        = 3000
+      target_port = 3000
+      protocol = "TCP"
+    }
+  }
+}

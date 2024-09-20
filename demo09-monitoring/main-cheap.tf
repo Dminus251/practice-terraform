@@ -1,3 +1,4 @@
+#기존 main.tf에서 가용성을 없애고 비용을 줄인 파일입니다.
 locals {
   any_port     = 0
   any_protocol = "-1"

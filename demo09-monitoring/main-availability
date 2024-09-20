@@ -1,3 +1,4 @@
+#기존 main.tf 파일입니다.
 locals {
   any_port     = 0
   any_protocol = "-1"

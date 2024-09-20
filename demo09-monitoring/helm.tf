@@ -112,9 +112,5 @@ resource "helm_release" "grafana"{
     name  = "persistence.storageClassName"
     value = "gp2"
   }
-  set {
-    name = "livenessPorbe.initialDelaySeconds"
-    value = "180"
-  }
 }
 

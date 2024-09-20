@@ -8,6 +8,9 @@ variable "AWS_REGION" {
   default = "ap-northeast-2"
 }
 
+variable "DOMAIN" {
+}
+
 # ###########PUBLIC SUBNET############
 variable "public_subnet-cidr" {
   type = list(string)

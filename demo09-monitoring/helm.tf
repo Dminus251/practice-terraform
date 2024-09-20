@@ -92,25 +92,29 @@ resource "helm_release" "prometheus"{
 #  }
 }
 ################################# GRAFANA ################################# 
-#resource "helm_release" "grafana"{
+resource "helm_release" "grafana"{
 #  #count = 0
-#  depends_on = [module.eks-cluster, module.addon-aws-ebs-csi-driver]
-#  repository = "https://grafana.github.io/helm-charts"
-#  name = "practice-grafana"
-#  chart = "grafana"
-#  namespace = "monitoring"
-#  create_namespace = true
-#   set {
-#    name  = "adminPassword"
-#    value = "admin"  
-#  }
-#  set {
-#    name  = "persistence.enabled"
-#    value = "true"
-#  }
-#  set {
-#    name  = "persistence.storageClassName"
-#    value = "gp2"
-#  }
-#}
+  depends_on = [module.eks-cluster, module.addon-aws-ebs-csi-driver]
+  repository = "https://grafana.github.io/helm-charts"
+  name = "practice-grafana"
+  chart = "grafana"
+  namespace = "monitoring"
+  create_namespace = true
+   set {
+    name  = "adminPassword"
+    value = "admin"  
+  }
+  set {
+    name  = "persistence.enabled"
+    value = "true"
+  }
+  set {
+    name  = "persistence.storageClassName"
+    value = "gp2"
+  }
+  set {
+    name = "livenessPorbe.initialDelaySeconds"
+    value = "180"
+  }
+}
 

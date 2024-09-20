@@ -57,14 +57,14 @@ resource "kubernetes_service_v1" "service-prometheus" {
 
 #Ingress for Grafana
 resource "kubernetes_ingress_v1" "ingress-grafana" { 
-  depends_on = [module.eks-cluster, module.node_group, helm_release.grafana, kubernees_service_v1.service-grafana]
+  depends_on = [module.eks-cluster, module.node_group, helm_release.grafana, kubernetes_service_v1.service-grafana]
   metadata {
     name = "ingress-grafana"
     namespace = "monitoring"
     annotations = {
       "alb.ingress.kubernetes.io/scheme" =  "internet-facing"
       "alb.ingress.kubernetes.io/target-type" =  "ip"
-      "alb.ingress.kubernetes.io/healthcheck-path" = "/"
+      "alb.ingress.kubernetes.io/healthcheck-path" = "/api/health"
     }
   }
   spec {

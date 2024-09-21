@@ -1,6 +1,5 @@
 ################################# AWS-LOADBALANCER-CONTROLLER ################################# 
 resource "helm_release" "alb-ingress-controller"{
-  #count = 0
   #depends_on = [module.eks-cluster, module.public_subnet, helm_release.cert-manager]
   depends_on = [module.eks-cluster, module.public_subnet]
   repository = "https://aws.github.io/eks-charts"
@@ -45,7 +44,8 @@ resource "helm_release" "alb-ingress-controller"{
     name  = "webhook.service.targetPort"
     value = "9443"
   }
-#  set {
+# helm_release.cert-manager 주석 해제할 경우 주석 해제
+#  set { #helm_release.cert-manager 주석 해제할 경우 주석 해제
 #    name = "enableCertManager"
 #   value = "true"
 #  }
@@ -86,14 +86,9 @@ resource "helm_release" "prometheus"{
     name  = "alertmanager.persistence.storageClass"
     value = "gp2"
   }
-#  set {
-#    name = "server.prefixURL"
-#    value = "/prometheus"
-#  }
 }
 ################################# GRAFANA ################################# 
 resource "helm_release" "grafana"{
-#  #count = 0
   depends_on = [module.eks-cluster, module.addon-aws-ebs-csi-driver]
   repository = "https://grafana.github.io/helm-charts"
   name = "practice-grafana"

@@ -13,7 +13,7 @@ resource "kubernetes_ingress_v1" "ingress-prometheus" {
   spec {
     ingress_class_name = "alb"
     rule {
-      host = "prometheus.${var.domain}"
+      host = "prometheus.${var.DOMAIN}"
       http {
         path {
           path_type = "Prefix"
@@ -70,7 +70,7 @@ resource "kubernetes_ingress_v1" "ingress-grafana" {
   spec {
     ingress_class_name = "alb"
     rule {
-      host = "grafana.${var.domain}"
+      host = "grafana.${var.DOMAIN}"
       http {
         path {
           path_type = "Prefix"

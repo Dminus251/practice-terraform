@@ -456,8 +456,9 @@ module "role-ecd-sa"{
 #  depends_on = [module.eks-cluster]
 #}
 
+############################ (아마 필요 없을)Route53 ###########################
 data "aws_route53_zone" "route53" {
-  name = "youngkyu.me"
+  name = "${var.DOMAIN}"
 }
 
 output "route53" {

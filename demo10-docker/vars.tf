@@ -10,7 +10,8 @@ variable "AWS_REGION" {
 
 variable "DOMAIN" {
 }
-
+variable "rds-password" {
+}
 # ###########PUBLIC SUBNET############
 variable "public_subnet-cidr" {
   type = list(string)

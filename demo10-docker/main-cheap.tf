@@ -464,3 +464,14 @@ data "aws_route53_zone" "route53" {
 output "route53" {
   value = data.aws_route53_zone.route53
 }
+
+module "rds" {
+  source = "./modules/t-aws-rds"
+  rds-allocated_storage    = 10
+  rds-db_name              = "yyk_db" #DBName must begin with a letter and contain only alphanumeric characters.
+  rds-engine               = "mysql"
+  rds-engine_version       = "8.0"
+  rds-instance_class       = "db.t3.micro"
+  rds-username             = "yyk"
+  rds-password             = var.rds-password
+}

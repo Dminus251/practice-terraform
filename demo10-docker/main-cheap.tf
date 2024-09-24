@@ -475,3 +475,18 @@ module "rds" {
   rds-username             = "yyk"
   rds-password             = var.rds-password
 }
+output "db_endpoint" {
+  value = module.rds.db_endpoint
+}
+output "db_name" {
+  value = module.rds.db_name
+}
+
+output "db_user" {
+  value = module.rds.db_user
+}
+
+output "db_password" {
+  value = module.rds.db_password
+  sensitive = true
+}

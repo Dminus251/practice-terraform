@@ -34,6 +34,15 @@ module "private_subnet" { #Private Subnet
   private_subnet-name = var.private_subnet-name[count.index]
 }
 
+module "db_subnet" { #DB Subnet
+  source 	      = "./modules/t-aws-private_subnet"
+  count 	      = length(var.db_subnet-cidr)
+  vpc-id 	      = module.vpc.vpc-id
+  private_subnet-cidr = var.db_subnet-cidr[count.index]
+  private_subnet-az   = count.index % 2 == 0 ? var.db_subnet-az[0] : var.db_subnet-az[1]
+  private_subnet-name = var.db_subnet-name[count.index]
+}
+
 #Internet Gateway
 module "igw" { 
   source = "./modules/t-aws-igw"

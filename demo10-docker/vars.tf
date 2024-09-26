@@ -44,6 +44,20 @@ variable "private_subnet-name" {
   default = ["private-2a", "private-2c"]
 }
 
+# ###########DB SUBNET############
+variable "db_subnet-cidr" {
+  type = list(string)
+  default = ["10.0.5.0/24", "10.0.6.0/24"]
+}
+
+variable "db_subnet-az" {
+  type = list(string)
+  default = ["ap-northeast-2a", "ap-northeast-2c"]
+}
+
+variable "db_subnet-name" {
+  type = list(string)
+  default = ["db-2a", "db-2c"]
 
 # ###########SECURITY GROUP############
 variable "sg-ingress" {

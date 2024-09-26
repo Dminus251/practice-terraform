@@ -6,19 +6,19 @@ provider "aws" {
 
 provider "kubernetes" {
   config_path = "~/.kube/config"
-  
-  host                   = module.eks-cluster.endpoint
-  token                  = data.aws_eks_cluster_auth.example.token
-  cluster_ca_certificate = base64decode(module.eks-cluster.kubeconfig-certificate-authority-data)
+  host                   = var.create_cluster ? module.eks-cluster[0].endpoint : ""
+  token                  = var.create_cluster ? data.aws_eks_cluster_auth.example[0].token : ""
+  cluster_ca_certificate = var.create_cluster ? base64decode(module.eks-cluster[0].kubeconfig-certificate-authority-data) : ""
 }
+
+
 
 provider "helm" {
   kubernetes {
     config_path = "~/.kube/config"
-  
-    host                   = module.eks-cluster.endpoint
-    token                  = data.aws_eks_cluster_auth.example.token
-    cluster_ca_certificate = base64decode(module.eks-cluster.kubeconfig-certificate-authority-data)
+    host                   = var.create_cluster ? module.eks-cluster[0].endpoint : ""
+    token                  = var.create_cluster ? data.aws_eks_cluster_auth.example[0].token : ""
+    cluster_ca_certificate = var.create_cluster ? base64decode(module.eks-cluster[0].kubeconfig-certificate-authority-data) : ""
   }
 }
 

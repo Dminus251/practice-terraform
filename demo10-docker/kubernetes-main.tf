@@ -1,5 +1,6 @@
 #Ingress for Prometheus
 resource "kubernetes_ingress_v1" "ingress-prometheus" { 
+  count			= var.create_cluster ? 1 : 0
   depends_on = [module.eks-cluster, module.node_group, helm_release.prometheus, kubernetes_service_v1.service-prometheus]
   metadata {
     name = "ingress-prometheus"
@@ -36,6 +37,7 @@ resource "kubernetes_ingress_v1" "ingress-prometheus" {
 
 #Service for Prometheus
 resource "kubernetes_service_v1" "service-prometheus" {
+  count			= var.create_cluster ? 1 : 0
   depends_on = [module.eks-cluster, module.node_group, helm_release.prometheus]
   metadata {
     name = "service-prometheus"
@@ -57,6 +59,7 @@ resource "kubernetes_service_v1" "service-prometheus" {
 
 #Ingress for Grafana
 resource "kubernetes_ingress_v1" "ingress-grafana" { 
+  count			= var.create_cluster ? 1 : 0
   depends_on = [module.eks-cluster, module.node_group, helm_release.grafana, kubernetes_service_v1.service-grafana]
   metadata {
     name = "ingress-grafana"
@@ -93,6 +96,7 @@ resource "kubernetes_ingress_v1" "ingress-grafana" {
 
 #Service for Grafana
 resource "kubernetes_service_v1" "service-grafana" {
+  count			= var.create_cluster ? 1 : 0
   depends_on = [module.eks-cluster, module.node_group, helm_release.grafana]
   metadata {
     name = "service-grafana"

@@ -83,3 +83,10 @@ variable "cluster-name" {
   type = string
   default = "yyk-cluster"
 }
+
+variable "create_cluster" {
+  description = "if 1, create cluster elif 0, not"
+  type        = bool
+  default     = false
+}
+

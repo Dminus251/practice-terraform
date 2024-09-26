@@ -4,6 +4,7 @@ locals {
   any_protocol = "-1"
   tcp_protocol = "tcp"
   all_ips      = ["0.0.0.0/0"]
+  create_rds = false
 }
 
 
@@ -177,25 +178,29 @@ module "sg_rule-public_ec2-allow_egress-all_traffic" {
   sg_rule-cidr_blocks = local.all_ips #허용할 cidr
 }
 ################################ EKS Configuration ###########################
-module "eks-cluster"{ 
+module "eks-cluster"{
+  count			= var.create_cluster ? 1 : 0
   source 		= "./modules/t-aws-eks/cluster"
   cluster-name 		= var.cluster-name
-  cluster-sg		= [module.sg-cluster.sg-id,]
-  cluster-role_arn 	= module.eks-role.arn
+  cluster-sg		= [module.sg-cluster[0].sg-id,]
+  cluster-role_arn 	= module.eks-role[0].arn
   cluster-subnet_ids 	= [ for i in module.private_subnet: i["private_subnet-id"] ]
 }
 
 module "eks-role"{
+  count			= var.create_cluster ? 1 : 0
   source = "./modules/t-aws-eks/role/eks_role"
 }
 
 module "sg-cluster" {
+  count			= var.create_cluster ? 1 : 0
   source     = "./modules/t-aws-sg"
   sg-vpc_id  = module.vpc.vpc-id
   sg-name    = "sg_cluster"
 }
 
 module "sg-node_group" { 
+  count			= var.create_cluster ? 1 : 0
   source     = "./modules/t-aws-sg"
   sg-vpc_id  = module.vpc.vpc-id
   sg-name    = "sg_nodegroup"
@@ -214,71 +219,77 @@ module "sg-node_group" {
 
 #노드 그룹의 sg에서 클러스터 sg의 ingress traffic 허용
 module "sg_rule-ng-allow_https-from_cluster" {
+  count		       = var.create_cluster ? 1 : 0
   source 	       = "./modules/t-aws-sg_rule-sg"
   sg_rule-type         = "ingress"
   sg_rule-from_port    = 443
   sg_rule-to_port      = 443
   sg_rule-protocol     = "tcp"
-  sg_rule-sg_id        = module.sg-node_group.sg-id #규칙을 적용할 sg
-  sg_rule-source_sg_id = module.sg-cluster.sg-id #허용할 sg
+  sg_rule-sg_id        = module.sg-node_group[0].sg-id #규칙을 적용할 sg
+  sg_rule-source_sg_id = module.sg-cluster[0].sg-id #허용할 sg
 }
 
 #노드 그룹의 sg에서 public subnet의 ssh ingress 허용
-module "sg_rule-ng-allow_ssh-from_public_subnet" {
+module "sg_rule-ng-allow_ssh-from_public_subnet" { 
+  count			= var.create_cluster ? 1 : 0
   source 	       = "./modules/t-aws-sg_rule-sg"
   sg_rule-type 	       = "ingress"
   sg_rule-from_port    = 22
   sg_rule-to_port      = 22
   sg_rule-protocol     = "tcp"
-  sg_rule-sg_id        = module.sg-node_group.sg-id #규칙을 적용할 sg
+  sg_rule-sg_id        = module.sg-node_group[0].sg-id #규칙을 적용할 sg
   sg_rule-source_sg_id = module.sg-public_ec2.sg-id #허용할 sg
 }
 
 module "sg_rule-ng-allow_Kubelet" {
+  count			= var.create_cluster ? 1 : 0
   source 	       = "./modules/t-aws-sg_rule-sg"
   description	       = "Kubelet API"
   sg_rule-type 	       = "ingress"
   sg_rule-from_port    = 10250
   sg_rule-to_port      = 10250
   sg_rule-protocol     = "tcp"
-  sg_rule-sg_id        = module.sg-node_group.sg-id #규칙을 적용할 sg
-  sg_rule-source_sg_id = module.eks-cluster.cluster-sg #허용할 sg
+  sg_rule-sg_id        = module.sg-node_group[0].sg-id #규칙을 적용할 sg
+  sg_rule-source_sg_id = module.eks-cluster[0].cluster-sg #허용할 sg
 }
 
 
 module "sg_rule-ng-allow_kube-porxy" {
+  count			= var.create_cluster ? 1 : 0
   source 	       = "./modules/t-aws-sg_rule-sg"
   description	       = "kube-proxy"
   sg_rule-type 	       = "ingress"
   sg_rule-from_port    = 10256
   sg_rule-to_port      = 10256
   sg_rule-protocol     = "tcp"
-  sg_rule-sg_id        = module.sg-node_group.sg-id #규칙을 적용할 sg
-  sg_rule-source_sg_id = module.eks-cluster.cluster-sg #허용할 sg
+  sg_rule-sg_id        = module.sg-node_group[0].sg-id #규칙을 적용할 sg
+  sg_rule-source_sg_id = module.eks-cluster[0].cluster-sg #허용할 sg
 }
 
 
 module "sg_rule-ng-allow_NodePort" {
+  count			= var.create_cluster ? 1 : 0
   source 	       = "./modules/t-aws-sg_rule-sg"
   description	       = "NodePort Services"
   sg_rule-type 	       = "ingress"
   sg_rule-from_port    = 30000
   sg_rule-to_port      = 32767
   sg_rule-protocol     = "tcp"
-  sg_rule-sg_id        = module.sg-node_group.sg-id #규칙을 적용할 sg
-  sg_rule-source_sg_id = module.eks-cluster.cluster-sg #허용할 sg
+  sg_rule-sg_id        = module.sg-node_group[0].sg-id #규칙을 적용할 sg
+  sg_rule-source_sg_id = module.eks-cluster[0].cluster-sg #허용할 sg
 }
 
 
 module "sg_rule-ng-allow_webhook" {
+  count			= var.create_cluster ? 1 : 0
   source 	       = "./modules/t-aws-sg_rule-sg"
   description	       = "allow webhook"
   sg_rule-type 	       = "ingress"
   sg_rule-from_port    = 9443
   sg_rule-to_port      = 9443
   sg_rule-protocol     = "tcp"
-  sg_rule-sg_id        = module.sg-node_group.sg-id #규칙을 적용할 sg
-  sg_rule-source_sg_id = module.eks-cluster.cluster-sg #허용할 sg
+  sg_rule-sg_id        = module.sg-node_group[0].sg-id #규칙을 적용할 sg
+  sg_rule-source_sg_id = module.eks-cluster[0].cluster-sg #허용할 sg
 }
 
 
@@ -287,173 +298,186 @@ module "sg_rule-ng-allow_webhook" {
 
 #클러스터 메인 보안 그룹에서 노드 그룹의 https ingress 허용
 module "sg_rule-main_cluster" {
+  count			= var.create_cluster ? 1 : 0
   source = "./modules/t-aws-sg_rule-sg"
   sg_rule-type = "ingress"
   sg_rule-from_port = 443
   sg_rule-to_port = 443
   sg_rule-protocol = "tcp"
-  sg_rule-sg_id = module.eks-cluster.cluster-sg #규칙을 적용할 sg
-  sg_rule-source_sg_id = module.sg-node_group.sg-id #허용할 sg
+  sg_rule-sg_id = module.eks-cluster[0].cluster-sg #규칙을 적용할 sg
+  sg_rule-source_sg_id = module.sg-node_group[0].sg-id #허용할 sg
   depends_on = [module.eks-cluster]
 }
 
 module "sg_rule-main_cluster-allow_kube_API" { 
+  count			= var.create_cluster ? 1 : 0
   source = "./modules/t-aws-sg_rule-sg"
   description = "Kubernetes API server"
   sg_rule-type = "ingress"
   sg_rule-from_port = 6443
   sg_rule-to_port = 6443
   sg_rule-protocol = "tcp"
-  sg_rule-sg_id = module.eks-cluster.cluster-sg #규칙을 적용할 sg
-  sg_rule-source_sg_id = module.sg-node_group.sg-id #허용할 sg
+  sg_rule-sg_id = module.eks-cluster[0].cluster-sg #규칙을 적용할 sg
+  sg_rule-source_sg_id = module.sg-node_group[0].sg-id #허용할 sg
   depends_on = [module.eks-cluster]
 }
 
 
 module "sg_rule-main_cluster-allow_etcd" { 
+  count			= var.create_cluster ? 1 : 0
   source = "./modules/t-aws-sg_rule-sg"
   description = "etcd server clien API"
   sg_rule-type = "ingress"
   sg_rule-from_port = 2379
   sg_rule-to_port = 2380
   sg_rule-protocol = "tcp"
-  sg_rule-sg_id = module.eks-cluster.cluster-sg #규칙을 적용할 sg
-  sg_rule-source_sg_id = module.sg-node_group.sg-id #허용할 sg
+  sg_rule-sg_id = module.eks-cluster[0].cluster-sg #규칙을 적용할 sg
+  sg_rule-source_sg_id = module.sg-node_group[0].sg-id #허용할 sg
   depends_on = [module.eks-cluster]
 }
 
 
 module "sg_rule-main_cluster-allow_kubelet" { 
+  count			= var.create_cluster ? 1 : 0
   source = "./modules/t-aws-sg_rule-sg"
   description = "kubelet API"
   sg_rule-type = "ingress"
   sg_rule-from_port = 10250
   sg_rule-to_port = 10250
   sg_rule-protocol = "tcp"
-  sg_rule-sg_id = module.eks-cluster.cluster-sg #규칙을 적용할 sg
-  sg_rule-source_sg_id = module.sg-node_group.sg-id #허용할 sg
+  sg_rule-sg_id = module.eks-cluster[0].cluster-sg #규칙을 적용할 sg
+  sg_rule-source_sg_id = module.sg-node_group[0].sg-id #허용할 sg
   depends_on = [module.eks-cluster]
 }
 
 
 module "sg_rule-main_cluster-allow_kube-scheduler" { 
+  count			= var.create_cluster ? 1 : 0
   source = "./modules/t-aws-sg_rule-sg"
   description = "kube-scheduler"
   sg_rule-type = "ingress"
   sg_rule-from_port = 10259
   sg_rule-to_port = 10259
   sg_rule-protocol = "tcp"
-  sg_rule-sg_id = module.eks-cluster.cluster-sg #규칙을 적용할 sg
-  sg_rule-source_sg_id = module.sg-node_group.sg-id #허용할 sg
+  sg_rule-sg_id = module.eks-cluster[0].cluster-sg #규칙을 적용할 sg
+  sg_rule-source_sg_id = module.sg-node_group[0].sg-id #허용할 sg
   depends_on = [module.eks-cluster]
 }
 
 
 module "sg_rule-main_cluster-allow_kube-controller-manager" { 
+  count			= var.create_cluster ? 1 : 0
   source = "./modules/t-aws-sg_rule-sg"
   description = "kube-controller-manager"
   sg_rule-type = "ingress"
   sg_rule-from_port = 10257
   sg_rule-to_port = 10257
   sg_rule-protocol = "tcp"
-  sg_rule-sg_id = module.eks-cluster.cluster-sg #규칙을 적용할 sg
-  sg_rule-source_sg_id = module.sg-node_group.sg-id #허용할 sg
+  sg_rule-sg_id = module.eks-cluster[0].cluster-sg #규칙을 적용할 sg
+  sg_rule-source_sg_id = module.sg-node_group[0].sg-id #허용할 sg
   depends_on = [module.eks-cluster]
 }
 
 module "sg_rule-main_cluster-allow_webhook" { 
+  count			= var.create_cluster ? 1 : 0
   source = "./modules/t-aws-sg_rule-sg"
   description = "allow webhook"
   sg_rule-type = "ingress"
   sg_rule-from_port = 9443
   sg_rule-to_port = 9443
   sg_rule-protocol = "tcp"
-  sg_rule-sg_id = module.eks-cluster.cluster-sg #규칙을 적용할 sg
-  sg_rule-source_sg_id = module.sg-node_group.sg-id #허용할 sg
+  sg_rule-sg_id = module.eks-cluster[0].cluster-sg #규칙을 적용할 sg
+  sg_rule-source_sg_id = module.sg-node_group[0].sg-id #허용할 sg
   depends_on = [module.eks-cluster]
-}
-output "cluster-main-sg"{
-  value = module.eks-cluster.cluster-sg
 }
 
 
 module "sg_rule-cluster-outbound" {
+  count			= var.create_cluster ? 1 : 0
   source = "./modules/t-aws-sg_rule-cidr"
   sg_rule-type = "egress"
   sg_rule-from_port = local.any_port
   sg_rule-to_port = local.any_port
   sg_rule-protocol = local.any_protocol
-  sg_rule-sg_id = module.sg-cluster.sg-id #규칙을 적용할 sg
+  sg_rule-sg_id = module.sg-cluster[0].sg-id #규칙을 적용할 sg
   sg_rule-cidr_blocks = local.all_ips #허용할 cidr
 }
 
 module "sg_rule-ng-outbound" {
+  count			= var.create_cluster ? 1 : 0
   source = "./modules/t-aws-sg_rule-cidr"
   sg_rule-type = "egress"
   sg_rule-from_port = local.any_port
   sg_rule-to_port = local.any_port
   sg_rule-protocol = local.any_protocol
-  sg_rule-sg_id = module.sg-node_group.sg-id #규칙을 적용할 sg
+  sg_rule-sg_id = module.sg-node_group[0].sg-id #규칙을 적용할 sg
   sg_rule-cidr_blocks = local.all_ips #허용할 cidr
 }
 
 
 #role of node_group
 module "ng-role"{
+  count			= var.create_cluster ? 1 : 0
   source = "./modules/t-aws-eks/role/ng_role"
 }
 
 #launch template for node_group
 module "lt-ng"{
+  count			= var.create_cluster ? 1 : 0
   source 	= "./modules/t-aws-launch_template"
-  lt-sg 	= [module.sg-node_group.sg-id]
+  lt-sg 	= [module.sg-node_group[0].sg-id]
   lt-key_name	= data.aws_key_pair.example.key_name
-  cluster-name 	= module.eks-cluster.cluster-name
+  cluster-name 	= module.eks-cluster[0].cluster-name
   aws_access_key_id = var.AWS_ACCESS_KEY
   aws_access_key_secret = var.AWS_SECRET_KEY
   region = var.AWS_REGION
 }
 
 module "node_group"{
+  count			= var.create_cluster ? 1 : 0
   source 	   = "./modules/t-aws-eks/ng"
-  cluster-name     = module.eks-cluster.cluster-name
+  cluster-name     = module.eks-cluster[0].cluster-name
   ng-name 	   = "pracite-ng-0"
-  ng-role_arn      = module.ng-role.arn
+  ng-role_arn      = module.ng-role[0].arn
   subnet-id        = [module.private_subnet[0].private_subnet-id]
-  ng-lt_id         = module.lt-ng.lt_id 
+  ng-lt_id         = module.lt-ng[0].lt_id 
   depends_on       = [module.eks-cluster, module.ng-role]
 }
 
 #OCID 공급자 연결
 module "openid_connect_provider"{
+  count			= var.create_cluster ? 1 : 0
   source ="./modules/t-aws-openid_connect_provider"
   client_id_list = ["sts.amazonaws.com"]
-  url = module.eks-cluster.oidc_url
+  url = module.eks-cluster[0].oidc_url
   depends_on = [module.eks-cluster]
 }
 
 #add on 
 module "addon-aws-ebs-csi-driver"{
+  count			= var.create_cluster ? 1 : 0
   source = "./modules/t-aws-eks/addon/"
-  addon-cluster_name = module.eks-cluster.cluster-name
+  addon-cluster_name = module.eks-cluster[0].cluster-name
   addon-name = "aws-ebs-csi-driver"
-  addon-role = module.role-ecd-sa.arn
+  addon-role = module.role-ecd-sa[0].arn
   depends_on = [module.node_group]
 }
 ############################ Helm Configuration ###########################
 
 #Role for aws-loadbalacner-controller sa
 module "role-alc-sa"{
+  count			= var.create_cluster ? 1 : 0
   source = "./modules/t-aws-eks/role/alc"
   role-alc_role_name = "alb-ingress-sa-role"
-  role-alc-oidc_without_https = module.eks-cluster.oidc_url_without_https
-  role-alc-namespace = module.sa-alc.sa-namespace
-  role-alc-sa_name = module.sa-alc.sa-name
+  role-alc-oidc_without_https = module.eks-cluster[0].oidc_url_without_https
+  role-alc-namespace = module.sa-alc[0].sa-namespace
+  role-alc-sa_name = module.sa-alc[0].sa-name
   depends_on = [module.eks-cluster]
 }
 
 #Service Account for aws-loadbalacner-controller
 module "sa-alc"{ 
+  count			= var.create_cluster ? 1 : 0
   source = "./modules/t-k8s-sa"
   sa-labels = {
     "app.kubernetes.io/component" = "controller" #구성 요소
@@ -470,9 +494,10 @@ module "sa-alc"{
 
 #Role of EBS-CSI-DRIVER sa
 module "role-ecd-sa"{
+  count			= var.create_cluster ? 1 : 0
   source = "./modules/t-aws-eks/role/ebs-csi-driver"
   role-ecd_role_name = "ebs-csi-controller-sa"
-  role-ecd-oidc_without_https = module.eks-cluster.oidc_url_without_https
+  role-ecd-oidc_without_https = module.eks-cluster[0].oidc_url_without_https
   role-ecd-namespace = "kube-system"
   role-ecd-sa_name = "ebs-csi-controller-sa"
   depends_on = [module.eks-cluster]
@@ -495,16 +520,10 @@ module "role-ecd-sa"{
 #}
 
 ############################ (아마 필요 없을)Route53 ###########################
-data "aws_route53_zone" "route53" {
-  name = "${var.DOMAIN}"
-}
-
-output "route53" {
-  value = data.aws_route53_zone.route53
-}
 
 module "rds" {
   source = "./modules/t-aws-rds"
+  count = local.create_rds ? 1 : 0
   rds-allocated_storage    = 10
   rds-db_name              = "yyk_db" #DBName must begin with a letter and contain only alphanumeric characters.
   rds-engine               = "mysql"
@@ -512,9 +531,10 @@ module "rds" {
   rds-instance_class       = "db.t3.micro"
   rds-username             = "yyk"
   rds-password             = var.rds-password
-  rds-db_subnet_group_name = aws_db_subnet_group.default.name
+  rds-db_subnet_group_name = aws_db_subnet_group.default[0].name
 }
 resource "aws_db_subnet_group" "default" {
+  count = local.create_rds ? 1 : 0
   name       = "main"
   subnet_ids = [module.db_subnet[0].private_subnet-id, module.db_subnet[1].private_subnet-id]
   tags = {
@@ -522,17 +542,17 @@ resource "aws_db_subnet_group" "default" {
   }
 }
 output "db_endpoint" {
-  value = module.rds.db_endpoint
+  value = local.create_rds ? module.rds[0].db_endpoint : null
 }
 output "db_name" {
-  value = module.rds.db_name
+  value = local.create_rds ? module.rds[0].db_name : null
 }
 
 output "db_user" {
-  value = module.rds.db_user
+  value = local.create_rds ? module.rds[0].db_user : null
 }
 
 output "db_password" {
-  value = module.rds.db_password
+  value = local.create_rds ? module.rds[0].db_password : null
   sensitive = true
 }

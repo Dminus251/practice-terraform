@@ -25,3 +25,7 @@ variable "rds-skip_final_snapshot"{
   type = string
   default = true
 }
+
+variable "rds-db_subnet_group_name"{
+  type = string
+}

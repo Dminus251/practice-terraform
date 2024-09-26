@@ -43,6 +43,35 @@ module "db_subnet" { #DB Subnet
   private_subnet-name = var.db_subnet-name[count.index]
 }
 
+#Securty Group for DB
+module "sg-db" { #
+  source    = "./modules/t-aws-sg"
+  sg-vpc_id = module.vpc.vpc-id 
+  sg-name   = "sg_db" #sg 이름에 하이픈('-') 사용 불가
+}
+
+#Security Group Rule for sg-db: Allow Ingress SSH Traffic from Private Subent
+module "sg_rule-db-allow_ingress_ssh" {
+  source = "./modules/t-aws-sg_rule-cidr"
+  sg_rule-type = "ingress"
+  sg_rule-from_port = 22
+  sg_rule-to_port = 22
+  sg_rule-protocol = "tcp"
+  sg_rule-sg_id = module.sg-db.sg-id #규칙을 적용할 sg
+  sg_rule-cidr_blocks = var.private_subnet-cidr #허용할 cidr
+}
+
+#Security Group Rule for sg-db: Allow Ingress HTTP Traffic from Private Subent
+module "sg_rule-db-allow_ingress_http" {
+  source = "./modules/t-aws-sg_rule-cidr"
+  sg_rule-type = "ingress"
+  sg_rule-from_port = 80
+  sg_rule-to_port = 80
+  sg_rule-protocol = "tcp"
+  sg_rule-sg_id = module.sg-db.sg-id #규칙을 적용할 sg
+  sg_rule-cidr_blocks = var.private_subnet-cidr #허용할 cidr
+}
+
 #Internet Gateway
 module "igw" { 
   source = "./modules/t-aws-igw"
@@ -483,6 +512,14 @@ module "rds" {
   rds-instance_class       = "db.t3.micro"
   rds-username             = "yyk"
   rds-password             = var.rds-password
+  rds-db_subnet_group_name = aws_db_subnet_group.default.name
+}
+resource "aws_db_subnet_group" "default" {
+  name       = "main"
+  subnet_ids = [module.db_subnet[0].private_subnet-id, module.db_subnet[1].private_subnet-id]
+  tags = {
+    Name = "My DB subnet group"
+  }
 }
 output "db_endpoint" {
   value = module.rds.db_endpoint

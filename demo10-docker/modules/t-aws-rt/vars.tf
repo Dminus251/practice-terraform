@@ -9,3 +9,8 @@ variable "gateway-id" {
 variable "rt-usage" {
   type = string
 }
+
+variable "cidr_block"{
+  type = string
+  default = "0.0.0.0/0"
+}

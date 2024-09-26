@@ -58,7 +58,7 @@ variable "db_subnet-az" {
 variable "db_subnet-name" {
   type = list(string)
   default = ["db-2a", "db-2c"]
-
+}
 # ###########SECURITY GROUP############
 variable "sg-ingress" {
   type = object({

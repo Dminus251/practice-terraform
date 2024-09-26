@@ -7,4 +7,5 @@ resource "aws_db_instance" "default" {
   username             = var.rds-username
   password             = var.rds-password
   skip_final_snapshot  = var.rds-skip_final_snapshot
+  db_subnet_group_name = var.rds-db_subnet_group_name
 }

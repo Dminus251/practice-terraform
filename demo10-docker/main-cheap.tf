@@ -4,7 +4,7 @@ locals {
   any_protocol = "-1"
   tcp_protocol = "tcp"
   all_ips      = ["0.0.0.0/0"]
-  create_rds = false
+  create_rds = true
 }
 
 
@@ -68,6 +68,17 @@ module "sg_rule-db-allow_ingress_http" {
   sg_rule-type = "ingress"
   sg_rule-from_port = 80
   sg_rule-to_port = 80
+  sg_rule-protocol = "tcp"
+  sg_rule-sg_id = module.sg-db.sg-id #규칙을 적용할 sg
+  sg_rule-cidr_blocks = var.private_subnet-cidr #허용할 cidr
+}
+
+#Security Group Rule for sg-db: Allow Ingress HTTP Traffic from Private Subent
+module "sg_rule-db-allow_ingress_MySQL" {
+  source = "./modules/t-aws-sg_rule-cidr"
+  sg_rule-type = "ingress"
+  sg_rule-from_port = 3306
+  sg_rule-to_port = 3306
   sg_rule-protocol = "tcp"
   sg_rule-sg_id = module.sg-db.sg-id #규칙을 적용할 sg
   sg_rule-cidr_blocks = var.private_subnet-cidr #허용할 cidr
@@ -532,6 +543,7 @@ module "rds" {
   rds-username             = "yyk"
   rds-password             = var.rds-password
   rds-db_subnet_group_name = aws_db_subnet_group.default[0].name
+  rds-vpc_security_group_ids = [module.sg-db.sg-id]
 }
 resource "aws_db_subnet_group" "default" {
   count = local.create_rds ? 1 : 0

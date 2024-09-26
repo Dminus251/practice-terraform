@@ -1,0 +1,16 @@
+1. terraform apply
+2. terraform output -json > ./yyk-server/terraform_outputs.json 명령으로 output 저장
+3. yyk-server에서 docker build -t dminus251/test:latest . 실행
+4. docker login 후 docker push
+5. public ec2로 ssh 전송
+6. scp user@remote_host:/home/user_name으로 key 전송
+7. key 이용해서 private ec2 ssh 연결 후 docker 설치
+  sudo yum update -y \
+  sudo yum install -y docker \
+  sudo service docker start
+8. docker pull
+9. docker run -it 이미지
+
+현재 컨테이너 내에서 curl http://localhost:5000/health 정상적으로 수행됨
+하지만 컨테이너를 실행하는 private subnet에서는 불가능
+보안그룹 같은거 더 봐야할 듯??

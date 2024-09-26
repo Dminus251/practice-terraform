@@ -29,3 +29,7 @@ variable "rds-skip_final_snapshot"{
 variable "rds-db_subnet_group_name"{
   type = string
 }
+
+variable "rds-vpc_security_group_ids"{
+  type = list(string)
+}

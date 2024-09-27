@@ -14,3 +14,6 @@
 현재 컨테이너 내에서 curl http://localhost:5000/health 정상적으로 수행됨
 하지만 컨테이너를 실행하는 private subnet에서는 불가능
 보안그룹 같은거 더 봐야할 듯??
+
+-> 아 해결했다 sudo docker run -p 5000:5000 dminus251/test:latest 명령으로 포트포워딩하니까 됨
+이제 private subnet 말고 인터넷에서도 접근할 수 있도록 해보자

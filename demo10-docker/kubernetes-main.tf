@@ -94,13 +94,6 @@ resource "kubernetes_ingress_v1" "ingress-grafana" {
   }
 }
 
-#terraform_outputs.json 파일 생성. depends_on에 꼭!!! 모든 output 넣을 것
-resource "terraform_data" "update-output_json" {
-  depends_on = [module.rds, module.rds[0].db_endpoint, module.rds[0].db_name, module.rds[0].db_user, module.rds[0].db_password]
-  provisioner "local-exec" {
-    command = "terraform output -json > ./yyk-server/terraform_outputs.json"
-  }
-}
 
 #Pod for my crud image
 resource "kubernetes_pod" "pod-crud" {
@@ -184,7 +177,8 @@ resource "kubernetes_ingress_v1" "ingress-crud" {
 
 #CRUD 이미지 빌드하기
 resource "null_resource" "build_image" {
-  depends_on = [terraform_data.update-output_json] #output update하고 build해야 함
+  count = 0
+  depends_on = [null_resource.update-output_json] #output update하고 build해야 함
   provisioner "local-exec" {
     command = <<EOT
       docker build -t dminus251/test:latest ./yyk-server/

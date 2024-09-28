@@ -531,6 +531,15 @@ module "role-ecd-sa"{
 
 ############################ (아마 필요 없을)Route53 ###########################
 
+resource "aws_db_subnet_group" "default" {
+  count = var.create_rds ? 1 : 0
+  name       = "main"
+  subnet_ids = [module.db_subnet[0].private_subnet-id, module.db_subnet[1].private_subnet-id]
+  tags = {
+    Name = "My DB subnet group"
+  }
+}
+
 module "rds" {
   source = "./modules/t-aws-rds"
   count = var.create_rds ? 1 : 0
@@ -543,14 +552,6 @@ module "rds" {
   rds-password             = var.rds-password
   rds-db_subnet_group_name = aws_db_subnet_group.default[0].name
   rds-vpc_security_group_ids = [module.sg-db.sg-id]
-}
-resource "aws_db_subnet_group" "default" {
-  count = var.create_rds ? 1 : 0
-  name       = "main"
-  subnet_ids = [module.db_subnet[0].private_subnet-id, module.db_subnet[1].private_subnet-id]
-  tags = {
-    Name = "My DB subnet group"
-  }
 }
 output "db_endpoint" {
   value = var.create_rds ? module.rds[0].db_endpoint : null
@@ -567,3 +568,31 @@ output "db_password" {
   value = var.create_rds ? module.rds[0].db_password : null
   sensitive = true
 }
+
+
+resource "null_resource" "update-output_json" {
+  depends_on = [module.rds, module.rds[0].db_endpoint, module.rds[0].db_name, module.rds[0].db_user, module.rds[0].db_password]
+  provisioner "local-exec" {
+    command = <<EOT
+      echo "********************************************************"
+      sleep 120
+      echo "db_endpoint: ${module.rds[0].db_endpoint}"
+      terraform output -json
+      terraform output -json > ./yyk-server/terraform_outputs.json
+    EOT
+  }
+}
+
+#차라리 이거 사용
+resource "local_file" "outputs" {
+  content  = jsonencode({
+    db_endpoint = module.rds[0].db_endpoint,
+    db_name     = module.rds[0].db_name,
+    db_user     = module.rds[0].db_user
+  })
+  filename = "./yyk-server/terraform_outputs.json"
+}
+
+#terraform_outputs.json 파일 생성. depends_on에 꼭 output 있는 모든 moudle 넣을 것
+#현재 db_endpoint 값만 terraform_outputs.json에 안 들어감.. 왜지??
+#lock 때문에 command 내에서 terraform refresh는 불가능

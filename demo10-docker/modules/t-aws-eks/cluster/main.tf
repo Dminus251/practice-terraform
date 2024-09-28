@@ -16,6 +16,5 @@ resource "terraform_data" "update_kubeconfig" {
   provisioner "local-exec" {
     command = "aws eks update-kubeconfig --region ap-northeast-2 --name ${var.cluster-name}"
   }
-
   depends_on = [aws_eks_cluster.example]
 }

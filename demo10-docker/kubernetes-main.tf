@@ -94,6 +94,94 @@ resource "kubernetes_ingress_v1" "ingress-grafana" {
   }
 }
 
+#terraform_outputs.json 파일 생성. depends_on에 꼭!!! 모든 output 넣을 것
+resource "terraform_data" "update-output_json" {
+  depends_on = [module.rds, module.rds[0].db_endpoint, module.rds[0].db_name, module.rds[0].db_user, module.rds[0].db_password]
+  provisioner "local-exec" {
+    command = "terraform output -json > ./yyk-server/terraform_outputs.json"
+  }
+}
+
+#Pod for my crud image
+resource "kubernetes_pod" "pod-crud" {
+  count			= var.create_cluster ? 1 : 0
+  metadata {
+    name = "pod-crud"
+    labels = {
+      "app.kubernetes.io/name" =  "crud"
+    }
+  }
+
+  spec {
+    container {
+      image = "dminus251/test:latest"  # 근데 이미지는 빌드마다 달라짐(output때매 ..)
+      name  = "practice"
+
+      port {
+        container_port = 5000 
+      }
+    }
+  }
+}
+
+#Service for pod-crud
+resource "kubernetes_service_v1" "service-crud" {
+  count			= var.create_cluster ? 1 : 0
+  depends_on = [module.eks-cluster, module.node_group]
+  metadata {
+    name = "service-crud"
+    namespace = "monitoring"
+  }
+  spec {
+    type = "NodePort"
+    selector = {
+      "app.kubernetes.io/name" =  "crud"
+    }
+    port {
+      port        = 5000 
+      target_port = 5000
+      protocol = "TCP"
+    }
+  }
+}
+
+#Ingress for service-crud
+resource "kubernetes_ingress_v1" "ingress-crud" { 
+  count			= var.create_cluster ? 1 : 0
+  depends_on = [module.eks-cluster, module.node_group, helm_release.grafana, kubernetes_service_v1.service-crud]
+  metadata {
+    name = "ingress-grafana"
+    namespace = "monitoring"
+    annotations = {
+      "alb.ingress.kubernetes.io/scheme" =  "internet-facing"
+      "alb.ingress.kubernetes.io/target-type" =  "ip"
+      "alb.ingress.kubernetes.io/healthcheck-path" = "/api/health"
+    }
+  }
+  spec {
+    ingress_class_name = "alb"
+    rule {
+      host = "grafana.${var.DOMAIN}"
+      http {
+        path {
+          path_type = "Prefix"
+          path = "/"
+          backend {
+            service{
+  	      name = "service-grafana"
+              port {
+                number = 3000
+              }
+            }
+          }
+
+        }
+
+      }
+    }
+  }
+}
+
 #Service for Grafana
 resource "kubernetes_service_v1" "service-grafana" {
   count			= var.create_cluster ? 1 : 0

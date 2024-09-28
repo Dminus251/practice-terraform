@@ -17,3 +17,7 @@
 
 -> 아 해결했다 sudo docker run -p 5000:5000 dminus251/test:latest 명령으로 포트포워딩하니까 됨
 이제 private subnet 말고 인터넷에서도 접근할 수 있도록 해보자
+
+그러면 이제 다시 eks 활성화해서 로드밸런서로 접근해야 함
+그러면 ingress와 service가 필요하고, 내 이미지로 연결되도록 해야 함
+일단 컨테이너 실행은 수동으로 해보자

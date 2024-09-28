@@ -85,8 +85,13 @@ variable "cluster-name" {
 }
 
 variable "create_cluster" {
-  description = "if 1, create cluster elif 0, not"
-  type        = bool
+  description = "if true, create cluster, else not"
+  type        = true
+  default     = false
+}
+variable "create_rds" {
+  description = "if true, create rds, else not"
+  type        = true
   default     = false
 }
 

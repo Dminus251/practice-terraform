@@ -4,7 +4,6 @@ locals {
   any_protocol = "-1"
   tcp_protocol = "tcp"
   all_ips      = ["0.0.0.0/0"]
-  create_rds = true
 }
 
 
@@ -534,7 +533,7 @@ module "role-ecd-sa"{
 
 module "rds" {
   source = "./modules/t-aws-rds"
-  count = local.create_rds ? 1 : 0
+  count = var.create_rds ? 1 : 0
   rds-allocated_storage    = 10
   rds-db_name              = "yyk_db" #DBName must begin with a letter and contain only alphanumeric characters.
   rds-engine               = "mysql"
@@ -546,7 +545,7 @@ module "rds" {
   rds-vpc_security_group_ids = [module.sg-db.sg-id]
 }
 resource "aws_db_subnet_group" "default" {
-  count = local.create_rds ? 1 : 0
+  count = var.create_rds ? 1 : 0
   name       = "main"
   subnet_ids = [module.db_subnet[0].private_subnet-id, module.db_subnet[1].private_subnet-id]
   tags = {
@@ -554,17 +553,17 @@ resource "aws_db_subnet_group" "default" {
   }
 }
 output "db_endpoint" {
-  value = local.create_rds ? module.rds[0].db_endpoint : null
+  value = var.create_rds ? module.rds[0].db_endpoint : null
 }
 output "db_name" {
-  value = local.create_rds ? module.rds[0].db_name : null
+  value = var.create_rds ? module.rds[0].db_name : null
 }
 
 output "db_user" {
-  value = local.create_rds ? module.rds[0].db_user : null
+  value = var.create_rds ? module.rds[0].db_user : null
 }
 
 output "db_password" {
-  value = local.create_rds ? module.rds[0].db_password : null
+  value = var.create_rds ? module.rds[0].db_password : null
   sensitive = true
 }

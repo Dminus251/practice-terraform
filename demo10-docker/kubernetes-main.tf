@@ -182,6 +182,19 @@ resource "kubernetes_ingress_v1" "ingress-crud" {
   }
 }
 
+#CRUD 이미지 빌드하기
+resource "null_resource" "build_image" {
+  depends_on = [terraform_data.update-output_json] #output update하고 build해야 함
+  provisioner "local-exec" {
+    command = <<EOT
+      docker build -t dminus251/test:latest ./yyk-server/
+      docker push dminus251/test:latest
+    EOT
+  }
+}
+
+
+
 #Service for Grafana
 resource "kubernetes_service_v1" "service-grafana" {
   count			= var.create_cluster ? 1 : 0

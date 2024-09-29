@@ -94,7 +94,6 @@ resource "kubernetes_ingress_v1" "ingress-grafana" {
   }
 }
 
-
 #Pod for my crud image
 resource "kubernetes_pod" "pod-crud" {
   count			= var.create_cluster ? 1 : 0
@@ -120,7 +119,7 @@ resource "kubernetes_pod" "pod-crud" {
 #Service for pod-crud
 resource "kubernetes_service_v1" "service-crud" {
   count			= var.create_cluster ? 1 : 0
-  depends_on = [module.eks-cluster, module.node_group]
+  depends_on = [module.eks-cluster, module.node_group, null_resource.build_image]
   metadata {
     name = "service-crud"
     namespace = "monitoring"
@@ -143,7 +142,7 @@ resource "kubernetes_ingress_v1" "ingress-crud" {
   count			= var.create_cluster ? 1 : 0
   depends_on = [module.eks-cluster, module.node_group, helm_release.grafana, kubernetes_service_v1.service-crud]
   metadata {
-    name = "ingress-grafana"
+    name = "ingress-crud"
     namespace = "monitoring"
     annotations = {
       "alb.ingress.kubernetes.io/scheme" =  "internet-facing"
@@ -154,16 +153,16 @@ resource "kubernetes_ingress_v1" "ingress-crud" {
   spec {
     ingress_class_name = "alb"
     rule {
-      host = "grafana.${var.DOMAIN}"
+      host = "crud.${var.DOMAIN}"
       http {
         path {
           path_type = "Prefix"
           path = "/"
           backend {
             service{
-  	      name = "service-grafana"
+  	      name = "service-crud"
               port {
-                number = 3000
+                number = 5000
               }
             }
           }

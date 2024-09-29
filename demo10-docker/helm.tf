@@ -74,8 +74,7 @@ resource "helm_release" "alb-ingress-controller"{
 
 ################################# PROMETHEUS ################################# 
 resource "helm_release" "prometheus"{
-  #count			= var.create_cluster ? 1 : 0
-  count = 0
+  count			= var.create_cluster ? 1 : 0
   depends_on = [module.eks-cluster, module.addon-aws-ebs-csi-driver, module.node_group]
   repository = "https://prometheus-community.github.io/helm-charts"
   name = "practice-prometheus" #release name
@@ -93,8 +92,7 @@ resource "helm_release" "prometheus"{
 }
 ################################# GRAFANA ################################# 
 resource "helm_release" "grafana"{
-  #count			= var.create_cluster ? 1 : 0
-  count = 0
+  count			= var.create_cluster ? 1 : 0
   depends_on = [module.eks-cluster, module.addon-aws-ebs-csi-driver]
   repository = "https://grafana.github.io/helm-charts"
   name = "practice-grafana"

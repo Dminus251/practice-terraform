@@ -24,8 +24,8 @@
 
 헬스 체크: curl http://localhost:5000/health
 
-CREATE: curl -X POSST http://localhost:5000/items -H "Content-Type: application/json" -d '{"name": "test_item1"}'
-CREATE: curl -X POSST http://localhost:5000/items -H "Content-Type: application/json" -d '{"name": "test_item2"}'
+CREATE: curl -X POST http://localhost:5000/items -H "Content-Type: application/json" -d '{"name": "test_item1"}'
+CREATE: curl -X POST http://localhost:5000/items -H "Content-Type: application/json" -d '{"name": "test_item2"}'
 READ:  curl -X GET http://localhost:5000/items
 UPDATE: curl -X PUT http://localhost:5000/items/2 -H "Content-Type: application/json" -d '{"name": "updated_item2"} #id가 2인 item을 update
 DELETE: curl -X DELETE http://localhost:5000/items/2

@@ -177,8 +177,8 @@ resource "kubernetes_ingress_v1" "ingress-crud" {
 
 #CRUD 이미지 빌드하기
 resource "null_resource" "build_image" {
-  count = 0
-  depends_on = [null_resource.update-output_json] #output update하고 build해야 함
+  count = 1
+  depends_on = [local_file.outputs] #output update하고 build해야 함
   provisioner "local-exec" {
     command = <<EOT
       docker build -t dminus251/test:latest ./yyk-server/

@@ -21,3 +21,11 @@
 그러면 이제 다시 eks 활성화해서 로드밸런서로 접근해야 함
 그러면 ingress와 service가 필요하고, 내 이미지로 연결되도록 해야 함
 일단 컨테이너 실행은 수동으로 해보자
+
+헬스 체크: curl http://localhost:5000/health
+
+CREATE: curl -X POSST http://localhost:5000/items -H "Content-Type: application/json" -d '{"name": "test_item1"}'
+CREATE: curl -X POSST http://localhost:5000/items -H "Content-Type: application/json" -d '{"name": "test_item2"}'
+READ:  curl -X GET http://localhost:5000/items
+UPDATE: curl -X PUT http://localhost:5000/items/2 -H "Content-Type: application/json" -d '{"name": "updated_item2"} #id가 2인 item을 update
+DELETE: curl -X DELETE http://localhost:5000/items/2

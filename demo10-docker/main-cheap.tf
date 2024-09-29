@@ -571,6 +571,7 @@ output "db_password" {
 
 
 resource "null_resource" "update-output_json" {
+  count = 0
   depends_on = [module.rds, module.rds[0].db_endpoint, module.rds[0].db_name, module.rds[0].db_user, module.rds[0].db_password]
   provisioner "local-exec" {
     command = <<EOT
@@ -588,7 +589,8 @@ resource "local_file" "outputs" {
   content  = jsonencode({
     db_endpoint = module.rds[0].db_endpoint,
     db_name     = module.rds[0].db_name,
-    db_user     = module.rds[0].db_user
+    db_user     = module.rds[0].db_user,
+    db_password = module.rds[0].db_password
   })
   filename = "./yyk-server/terraform_outputs.json"
 }

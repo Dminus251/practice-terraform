@@ -8,12 +8,12 @@ with open('terraform_outputs.json', 'r') as f:
     outputs = json.load(f)
 
 # db_endpoint의 value 값을 추출
-db_endpoint = outputs['db_endpoint']['value']
+db_endpoint = outputs['db_endpoint']
 
 # MySQL 연결 URI 생성
-username = outputs['db_user']['value']  # MySQL 사용자 이름
-password = outputs['db_password']['value']  # MySQL 비밀번호
-database_name = outputs['db_name']['value']  # MySQL 데이터베이스 이름
+username = outputs['db_user']  # MySQL 사용자 이름
+password = outputs['db_password']  # MySQL 비밀번호
+database_name = outputs['db_name']  # MySQL 데이터베이스 이름
 
 # MySQL URI 포맷
 mysql_uri = f'mysql+mysqlconnector://{username}:{password}@{db_endpoint}/{database_name}'

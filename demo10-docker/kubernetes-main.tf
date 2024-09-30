@@ -96,9 +96,11 @@ resource "kubernetes_ingress_v1" "ingress-grafana" {
 
 #Pod for my crud image
 resource "kubernetes_pod" "pod-crud" {
+  depends_on = [module.eks-cluster, module.node_group, null_resource.build_image, helm_release.grafana]
   count			= var.create_cluster ? 1 : 0
   metadata {
     name = "pod-crud"
+    namespace = "monitoring"
     labels = {
       "app.kubernetes.io/name" =  "crud"
     }
@@ -119,7 +121,7 @@ resource "kubernetes_pod" "pod-crud" {
 #Service for pod-crud
 resource "kubernetes_service_v1" "service-crud" {
   count			= var.create_cluster ? 1 : 0
-  depends_on = [module.eks-cluster, module.node_group, null_resource.build_image]
+  depends_on = [module.eks-cluster, module.node_group, null_resource.build_image, helm_release.grafana]
   metadata {
     name = "service-crud"
     namespace = "monitoring"

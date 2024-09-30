@@ -108,7 +108,7 @@ resource "kubernetes_pod" "pod-crud" {
 
   spec {
     container {
-      image = "dminus251/test:latest"  # 근데 이미지는 빌드마다 달라짐(output때매 ..)
+      image = "dminus251/test:latest"
       name  = "practice"
 
       port {
@@ -149,7 +149,7 @@ resource "kubernetes_ingress_v1" "ingress-crud" {
     annotations = {
       "alb.ingress.kubernetes.io/scheme" =  "internet-facing"
       "alb.ingress.kubernetes.io/target-type" =  "ip"
-      "alb.ingress.kubernetes.io/healthcheck-path" = "/api/health"
+      "alb.ingress.kubernetes.io/healthcheck-path" = "/health"
     }
   }
   spec {

@@ -33,3 +33,8 @@ variable "rds-db_subnet_group_name"{
 variable "rds-vpc_security_group_ids"{
   type = list(string)
 }
+
+variable "rds-multi_az"{
+  type = bool
+}
+

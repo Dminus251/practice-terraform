@@ -13,4 +13,7 @@ resource "aws_eks_node_group" "example" {
     id      = var.ng-lt_id
     version = "$Latest"
   } 
+   timeouts {
+    create = "10m"
+  }
 }

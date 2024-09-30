@@ -33,6 +33,9 @@ module "private_subnet" { #Private Subnet
   private_subnet-az   = count.index % 2 == 0 ? var.private_subnet-az[0] : var.private_subnet-az[1]
   private_subnet-name = var.private_subnet-name[count.index]
 }
+output "private_subnet"{
+  value = module.private_subnet
+}
 
 #DB subnet
 module "db_subnet" { #DB Subnet
@@ -114,7 +117,7 @@ module "eip" {
 
 #NAT Gateway
 module "nat" { #NAT Gateway
-  count = 1
+  count = length(module.public_subnet)
   source    = "./modules/t-aws-nat"
   eip-id    = module.eip[count.index].eip-id
   subnet-id = module.public_subnet[count.index].public_subnet-id  #nat는 public subnet에 위치해야 함
@@ -124,7 +127,7 @@ module "nat" { #NAT Gateway
 #Route Table: 0.0.0.0/0 to NAT
 module "route_table-internet_to_nat" { 
   source     = "./modules/t-aws-rt"
-  count      = 1
+  count      = length(module.private_subnet)
   vpc-id     = module.vpc.vpc-id
   gateway-id = module.nat[count.index].nat-id
   rt-usage   = "nat"
@@ -132,7 +135,7 @@ module "route_table-internet_to_nat" {
 
 #Associate Route Table: route_table_internet_to_nat with Private Subnet
 module "rta-internet_to_nat" { 
-  count = 1
+  count = length(module.private_subnet)
   source = "./modules/t-aws-rta"
   subnet-id = module.private_subnet[count.index].private_subnet-id
   rt-id = module.route_table-internet_to_nat[count.index].rt-id
@@ -434,7 +437,7 @@ module "ng-role"{
 
 #launch template for node_group
 module "lt-ng"{
-  count			= var.create_cluster ? 1 : 0
+  count		= var.create_cluster ? 1 : 0
   source 	= "./modules/t-aws-launch_template"
   lt-sg 	= [module.sg-node_group[0].sg-id]
   lt-key_name	= data.aws_key_pair.example.key_name
@@ -445,15 +448,19 @@ module "lt-ng"{
 }
 
 module "node_group"{
-  count			= var.create_cluster ? 1 : 0
+  for_each         = var.create_cluster ? {for i, subnet in module.private_subnet: i => subnet} : {}
+  #count		   = var.create_cluster ? 1 : 0
+  #count와 for_each를 같이 사용할 수 없어서 이렇게 했는데 일단 apply해보자.
   source 	   = "./modules/t-aws-eks/ng"
   cluster-name     = module.eks-cluster[0].cluster-name
-  ng-name 	   = "pracite-ng-0"
+  ng-name 	   = "pracite-ng-${each.key}"
   ng-role_arn      = module.ng-role[0].arn
-  subnet-id        = [module.private_subnet[0].private_subnet-id]
+  #subnet-id        = [module.private_subnet[0].private_subnet-id]
+  subnet-id	   = [each.value["private_subnet-id"]]
   ng-lt_id         = module.lt-ng[0].lt_id 
   depends_on       = [module.eks-cluster, module.ng-role]
 }
+
 
 #OCID 공급자 연결
 module "openid_connect_provider"{
@@ -552,6 +559,7 @@ module "rds" {
   rds-password             = var.rds-password
   rds-db_subnet_group_name = aws_db_subnet_group.default[0].name
   rds-vpc_security_group_ids = [module.sg-db.sg-id]
+  rds-multi_az = true
 }
 
 
@@ -571,6 +579,7 @@ resource "null_resource" "update-output_json" {
 
 #차라리 이거 사용
 resource "local_file" "outputs" {
+  count = var.create_rds ? 1 : 0
   content  = jsonencode({
     db_endpoint = module.rds[0].db_endpoint,
     db_name     = module.rds[0].db_name,

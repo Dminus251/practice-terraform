@@ -34,6 +34,7 @@ module "private_subnet" { #Private Subnet
   private_subnet-name = var.private_subnet-name[count.index]
 }
 
+#DB subnet
 module "db_subnet" { #DB Subnet
   source 	      = "./modules/t-aws-private_subnet"
   count 	      = length(var.db_subnet-cidr)
@@ -514,6 +515,7 @@ module "role-ecd-sa"{
 }
 
 #Service Account for EBS-CSI-Driver
+#addon 구성 시 자동으로 생성돼서 필요 없음
 #module "sa-ecd"{
 #  source = "./modules/t-k8s-sa"
 #  sa-labels = {
@@ -528,8 +530,6 @@ module "role-ecd-sa"{
 #  }
 #  depends_on = [module.eks-cluster]
 #}
-
-############################ (아마 필요 없을)Route53 ###########################
 
 resource "aws_db_subnet_group" "default" {
   count = var.create_rds ? 1 : 0
@@ -552,21 +552,6 @@ module "rds" {
   rds-password             = var.rds-password
   rds-db_subnet_group_name = aws_db_subnet_group.default[0].name
   rds-vpc_security_group_ids = [module.sg-db.sg-id]
-}
-output "db_endpoint" {
-  value = var.create_rds ? module.rds[0].db_endpoint : null
-}
-output "db_name" {
-  value = var.create_rds ? module.rds[0].db_name : null
-}
-
-output "db_user" {
-  value = var.create_rds ? module.rds[0].db_user : null
-}
-
-output "db_password" {
-  value = var.create_rds ? module.rds[0].db_password : null
-  sensitive = true
 }
 
 

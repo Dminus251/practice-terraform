@@ -92,6 +92,6 @@ variable "create_cluster" {
 variable "create_rds" {
   description = "if true, create rds, else not"
   type        = bool
-  default     = false
+  default     = true
 }
 

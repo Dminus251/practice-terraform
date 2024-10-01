@@ -33,9 +33,6 @@ module "private_subnet" { #Private Subnet
   private_subnet-az   = count.index % 2 == 0 ? var.private_subnet-az[0] : var.private_subnet-az[1]
   private_subnet-name = var.private_subnet-name[count.index]
 }
-output "private_subnet"{
-  value = module.private_subnet
-}
 
 #DB subnet
 module "db_subnet" { #DB Subnet
@@ -76,7 +73,7 @@ module "sg_rule-db-allow_ingress_http" {
   sg_rule-cidr_blocks = var.private_subnet-cidr #허용할 cidr
 }
 
-#Security Group Rule for sg-db: Allow Ingress HTTP Traffic from Private Subent
+#Security Group Rule for sg-db: Allow Ingress MySQL Traffic from Private Subent
 module "sg_rule-db-allow_ingress_MySQL" {
   source = "./modules/t-aws-sg_rule-cidr"
   sg_rule-type = "ingress"
@@ -153,15 +150,15 @@ data "aws_key_pair" "example" {
 ################################ EC2 Configuration ###########################
 
 #Public EC2
-module "ec2_public" {
-  source       = "./modules/t-aws-ec2"
-  for_each     = { for i, subnet in module.public_subnet : i => subnet["public_subnet-id"] } # public subnet을 우선으로 반복
-  ec2-subnet   = each.value
-  ec2-az       = each.key % 2 == 0 ? "ap-northeast-2a" : "ap-northeast-2c"
-  ec2-key_name = data.aws_key_pair.example.key_name
-  ec2-usage    = "public-${each.key}"
-  ec2-sg       = [module.sg-public_ec2.sg-id]
-}
+#module "ec2_public" {
+#  source       = "./modules/t-aws-ec2"
+#  for_each     = { for i, subnet in module.public_subnet : i => subnet["public_subnet-id"] } # public subnet을 우선으로 반복
+#  ec2-subnet   = each.value
+#  ec2-az       = each.key % 2 == 0 ? "ap-northeast-2a" : "ap-northeast-2c"
+#  ec2-key_name = data.aws_key_pair.example.key_name
+#  ec2-usage    = "public-${each.key}"
+#  ec2-sg       = [module.sg-public_ec2.sg-id]
+#}
 
 #Securty Group for Public EC2
 module "sg-public_ec2" { #

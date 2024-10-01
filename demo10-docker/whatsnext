@@ -40,3 +40,10 @@ route53 호스팅 대상 설정만 하면 끝날듯
 ingress로 로드밸런서 생성 안 되면 aws-loadbalancer-controller pod 삭제하기
 
 DB 콘솔에서 '구성'에 보조영역 화인 가능
+
+****prometheus, grafana의 pvc가 pending인 경우
+helm.tf를 나중에 apply하면 되는데 왜그런지 모르겠네
+아마 addon부터 설치돼야하고, 그래서 helm의 depends_on에 addon을 추가해놨는데..
+provisioner 문제는 아님
+helm.tf를 나중에 추가하면 route table에서 nat_gateway_id 속성을 gateway_id 속성을 변경한다고 나옴 아마 이 문제가 아닐까??
+내일 마저 해결해보자

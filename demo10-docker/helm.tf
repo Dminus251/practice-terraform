@@ -93,7 +93,7 @@ resource "helm_release" "prometheus"{
 ################################# GRAFANA ################################# 
 resource "helm_release" "grafana"{
   count			= var.create_cluster ? 1 : 0
-  depends_on = [module.eks-cluster, module.addon-aws-ebs-csi-driver]
+  depends_on = [module.eks-cluster, module.addon-aws-ebs-csi-driver, module.node_group]
   repository = "https://grafana.github.io/helm-charts"
   name = "practice-grafana"
   chart = "grafana"
@@ -111,5 +111,6 @@ resource "helm_release" "grafana"{
     name  = "persistence.storageClassName"
     value = "gp2"
   }
+
 }
 

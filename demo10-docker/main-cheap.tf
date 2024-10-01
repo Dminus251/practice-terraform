@@ -92,7 +92,7 @@ module "igw" {
 
 #Route Table: From 0.0.0.0/0 to IGW
 module "route_table-igw_to_vpc" {
-  source     = "./modules/t-aws-rt"
+  source     = "./modules/t-aws-rt-igw"
   vpc-id     = module.vpc.vpc-id
   gateway-id = module.igw.igw-id
   rt-usage   = "igw"
@@ -123,7 +123,7 @@ module "nat" { #NAT Gateway
 
 #Route Table: 0.0.0.0/0 to NAT
 module "route_table-internet_to_nat" { 
-  source     = "./modules/t-aws-rt"
+  source     = "./modules/t-aws-rt-nat"
   count      = length(module.private_subnet)
   vpc-id     = module.vpc.vpc-id
   gateway-id = module.nat[count.index].nat-id

@@ -1,3 +1,16 @@
+resource "kubernetes_storage_class" "gp2" {
+  depends_on = [module.eks-cluster, module.public_subnet, module.node_group]
+  metadata {
+    name = "terraform-example"
+  }
+  storage_provisioner = "ebs.csi.aws.com"
+  volume_binding_mode = "Immediate"
+  reclaim_policy = "Delete"
+  parameters = {
+    type = "gp2"
+  }
+}
+
 
 ################################# AWS-LOADBALANCER-CONTROLLER ################################# 
 resource "helm_release" "alb-ingress-controller"{
@@ -75,7 +88,7 @@ resource "helm_release" "alb-ingress-controller"{
 ################################# PROMETHEUS ################################# 
 resource "helm_release" "prometheus"{
   count			= var.create_cluster ? 1 : 0
-  depends_on = [module.eks-cluster, module.addon-aws-ebs-csi-driver, module.node_group]
+  depends_on = [module.eks-cluster, module.addon-aws-ebs-csi-driver, module.node_group, resource.kubernetes_storage_class.gp2]
   repository = "https://prometheus-community.github.io/helm-charts"
   name = "practice-prometheus" #release name
   chart = "prometheus" # chart name
@@ -83,17 +96,17 @@ resource "helm_release" "prometheus"{
   create_namespace = true
   set {
     name = "server.persistentVolume.storageClass"
-    value = "gp2"
+    value = "terraform-example"
   }
   set {
     name  = "alertmanager.persistence.storageClass"
-    value = "gp2"
+    value = "terraform-example"
   }
 }
 ################################# GRAFANA ################################# 
 resource "helm_release" "grafana"{
   count			= var.create_cluster ? 1 : 0
-  depends_on = [module.eks-cluster, module.addon-aws-ebs-csi-driver, module.node_group]
+  depends_on = [module.eks-cluster, module.addon-aws-ebs-csi-driver, module.node_group, resource.kubernetes_storage_class.gp2]
   version = "8.5.1"
   repository = "https://grafana.github.io/helm-charts"
   name = "practice-grafana"
@@ -110,7 +123,7 @@ resource "helm_release" "grafana"{
   }
   set {
     name  = "persistence.storageClassName"
-    value = "gp2"
+    value = "terraform-example"
   }
 
 }

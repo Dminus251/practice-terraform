@@ -4,6 +4,7 @@ resource "aws_launch_template" "example" {
 
   vpc_security_group_ids = var.lt-sg
   key_name 		 = var.lt-key_name
+  default_version	 = "1"
   user_data = base64encode(<<EOF
 	#!/bin/bash
 	/etc/eks/bootstrap.sh ${var.cluster-name}

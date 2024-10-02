@@ -47,3 +47,34 @@ helm.tf를 나중에 apply하면 되는데 왜그런지 모르겠네
 provisioner 문제는 아님
 helm.tf를 나중에 추가하면 route table에서 nat_gateway_id 속성을 gateway_id 속성을 변경한다고 나옴 아마 이 문제가 아닐까??
 내일 마저 해결해보자
+-> 근본적 원인은 아닌듯?? helm.tf를 나중에 apply해도 여전히 pvc가 pending일 때도 있다
+
+nat용 igw용 분리 후
+1트: nat_gatewy_id만 채워져있고, helm.tf 변경 후 terraform apply해도 라우팅테이블 변경사항 없음, 성공
+     pvc의 이 로그는 Bound 성공 시에도 나옴  Waiting for a volume to be created either by the external provisioner 'ebs.csi.aws.com' or manually by the system administrator. If volume creation is delayed, please verify that the provisioner is running and correctly registered.
+     gp2의 프로비저너는 kubernetes.io/aws-ebs인데 왜지?
+
+내일 할 일
+1. launch template 문제인지도 확인해보자 $Latest에서 1로 고정
+2. 성공, 실패 시 ebs csi driver event 로그 확인해보기
+3. 성공, 실패 시 콘솔의 EC2->EBS 차이점 있나 확인해보기
+
+k describe로는 event에 이상 없고, k logs로 ebs csi driver 확인해보니까 아래 두 에러 메시지가 있음
+  - could not create volume in EC2: operation error EC2: CreateVolume, get identity: get credentials: failed to refresh cached credentials, failed to retrieve credentials, operation error STS: AssumeRoleWithWebIdentity, exceeded maximum number of attempts, 3, https response error StatusCode: 0, RequestID: , request send failed, Post \"https://sts.ap-northeast-2.amazonaws.com/\": dial tcp: lookup sts.ap-northeast-2.amazonaws.com: i/o timeout"
+  - could not create volume in EC2: operation error EC2: CreateVolume, get identity: get credentials: request canceled, context canceled"
+그런데 이해가 안 가는 점은 private a subnet의 pod에서만 이런 로그가 있음 private c subnet의 로그는 에러 메시지 x
+이중화 전에 private a subnet만 사용했을 땐 pending되는 에러가 발생하지 않았었는데 뭐지??
+1. 권한 문제거나, 2. 네트워크 문제일 것임
+에러가 발생했을 때 아래 순서로 프로비저닝됐음
+  - eks cluster 생성
+  - sg_rule-ng, sg_rule-cluster들 생성
+  - update kubeconfig
+  - oidc 생성
+  - ebs-csi-controller용 Role 생성
+  - ebs-csi-controller addon 생성
+  - grafana, prometheus생성, 얘네가 pvc도 생성함 (persistentVolume = true이므로)
+즉 oidc -> role -> addon -> pvc 순서로 생성하므로 Role에는 적절한 권한이 있음
+그리고 private 2a 서브넷의 pod에서 에러가 발생하는데, 이 서브넷에 ssh 연결 후 ping 8.8.8.8 실행 결과 인터넷과 통신 가능함
+즉 네트워크 문제도 아님 ...
+또 콘솔에서 확인 결과 ebs는 생성되어 있고, 인스턴스에 붙어 있음
+아니 근데 왜 저런 에러가 발생하지 ??????????

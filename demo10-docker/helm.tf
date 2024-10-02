@@ -3,7 +3,7 @@
 resource "helm_release" "alb-ingress-controller"{
   count			= var.create_cluster ? 1 : 0
   #depends_on = [module.eks-cluster, module.public_subnet, helm_release.cert-manager]
-  depends_on = [module.eks-cluster, module.public_subnet]
+  depends_on = [module.eks-cluster, module.public_subnet, module.node_group]
   repository = "https://aws.github.io/eks-charts"
   name = "aws-load-balancer-controller" #release name
   chart = "aws-load-balancer-controller" #chart name
@@ -94,6 +94,7 @@ resource "helm_release" "prometheus"{
 resource "helm_release" "grafana"{
   count			= var.create_cluster ? 1 : 0
   depends_on = [module.eks-cluster, module.addon-aws-ebs-csi-driver, module.node_group]
+  version = "8.5.1"
   repository = "https://grafana.github.io/helm-charts"
   name = "practice-grafana"
   chart = "grafana"

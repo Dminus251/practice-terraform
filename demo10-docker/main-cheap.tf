@@ -589,3 +589,7 @@ resource "local_file" "outputs" {
 #terraform_outputs.json 파일 생성. depends_on에 꼭 output 있는 모든 moudle 넣을 것
 #현재 db_endpoint 값만 terraform_outputs.json에 안 들어감.. 왜지??
 #lock 때문에 command 내에서 terraform refresh는 불가능
+
+data "aws_route53_zone" "selected" {
+  name         = "dududrb.shop"
+}

@@ -102,6 +102,10 @@ resource "helm_release" "prometheus"{
     name  = "alertmanager.persistence.storageClass"
     value = "terraform-example"
   }
+  set {
+    name = "server.livenessProbeInitialDelay"
+    value = "420"
+  }
 }
 ################################# GRAFANA ################################# 
 resource "helm_release" "grafana"{
@@ -125,6 +129,9 @@ resource "helm_release" "grafana"{
     name  = "persistence.storageClassName"
     value = "terraform-example"
   }
-
+  set {
+    name = "livenessProbe.initialDelaySeconds"
+    value = "420"
+  }
 }
 

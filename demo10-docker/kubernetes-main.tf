@@ -178,7 +178,7 @@ resource "kubernetes_ingress_v1" "ingress-crud" {
 
 #CRUD 이미지 빌드하기
 resource "null_resource" "build_image" {
-  count = 1
+  count = var.create_rds ? 1 : 0
   depends_on = [local_file.outputs] #output update하고 build해야 함
   provisioner "local-exec" {
     command = <<EOT

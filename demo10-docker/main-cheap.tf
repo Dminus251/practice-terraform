@@ -118,6 +118,7 @@ module "nat" { #NAT Gateway
   source    = "./modules/t-aws-nat"
   eip-id    = module.eip[count.index].eip-id
   subnet-id = module.public_subnet[count.index].public_subnet-id  #nat는 public subnet에 위치해야 함
+  nat-name  = "practice-nat${count.index}"
 }
 
 
@@ -450,7 +451,7 @@ module "node_group"{
   #count와 for_each를 같이 사용할 수 없어서 이렇게 했는데 일단 apply해보자.
   source 	   = "./modules/t-aws-eks/ng"
   cluster-name     = module.eks-cluster[0].cluster-name
-  ng-name 	   = "pracite-ng-${each.key}"
+  ng-name 	   = "practice-ng-${each.key}"
   ng-role_arn      = module.ng-role[0].arn
   #subnet-id        = [module.private_subnet[0].private_subnet-id]
   subnet-id	   = [each.value["private_subnet-id"]]

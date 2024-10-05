@@ -228,6 +228,17 @@ module "sg-node_group" {
 #  sg_rule-source_sg_id = module.sg-node_group.sg-id #허용할 sg
 #}
 
+#ebs-csi-controller 통신 테스트를 위해 임시로 포트 허용
+module "temporary_allow_port" {
+  source		= "./modules/t-aws-sg_rule-cidr"
+  description      = "temporary"
+  sg_rule-type              = "ingress"
+  sg_rule-from_port         = 1024
+  sg_rule-to_port           = 65535
+  sg_rule-protocol          = "tcp"
+  sg_rule-sg_id = module.sg-node_group[0].sg-id
+  sg_rule-cidr_blocks	    = ["10.0.0.0/24", "10.0.2.0/24"] #허용할 cidr block
+}
 
 #노드 그룹의 sg에서 클러스터 sg의 ingress traffic 허용
 module "sg_rule-ng-allow_https-from_cluster" {
